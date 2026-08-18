@@ -276,6 +276,74 @@
   .ring-label { font-size: 15px; color: var(--muted); margin-bottom: 18px; }
   .ring-actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .ring-actions button { flex: 1; min-width: 40%; }
+
+  /* ---- streaks ---- */
+  .streaks-row { display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 4px; }
+  .streak-chip { flex: none; display: flex; align-items: center; gap: 7px; background: var(--paper-raised); border: 1px solid var(--line-soft); border-radius: 999px; padding: 6px 12px 6px 6px; box-shadow: var(--shadow); }
+  .streak-num { min-width: 22px; height: 22px; border-radius: 50%; color: #fff; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; padding: 0 5px; }
+  .streak-label { font-size: 12.5px; font-weight: 700; white-space: nowrap; }
+
+  /* ---- productivity score ---- */
+  .score-body { padding: 14px 16px 16px; }
+  .score-top { display: flex; align-items: center; gap: 14px; }
+  .score-pct { font-size: 30px; font-weight: 800; font-variant-numeric: tabular-nums; flex: none; width: 68px; }
+  .score-bar { flex: 1; height: 10px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+  .score-bar-fill { height: 100%; border-radius: 999px; transition: width .25s ease; }
+  .score-stats { margin-top: 10px; font-size: 12.5px; color: var(--muted); }
+
+  /* ---- weekly focus graph ---- */
+  .graph-row { display: flex; align-items: flex-end; gap: 8px; padding: 14px 16px 12px; }
+  .gbar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .gbar-track { display: flex; align-items: flex-end; height: 64px; }
+  .gbar-fill { width: 14px; border-radius: 5px 5px 2px 2px; background: var(--line); }
+  .gbar-fill.today { background: var(--accent); }
+  .gbar-label { font-size: 10.5px; color: var(--muted); font-weight: 700; }
+
+  /* ---- status control (subjects: today's work) ---- */
+  .status-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); background: none; padding: 0; display: flex; align-items: center; justify-content: center; color: #fff; flex: none; }
+  .status-check.st-done { background: var(--good); border-color: var(--good); }
+  .status-check.st-partial { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .status-btns { display: flex; gap: 6px; }
+  .status-btns button { flex: 1; padding: 8px 4px; font-size: 12px; background: var(--paper); border: 1px solid var(--line); color: var(--muted); }
+  .status-btns button.active[data-s="done"] { background: var(--good); border-color: var(--good); color: #fff; }
+  .status-btns button.active[data-s="partial"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .status-btns button.active[data-s="none"] { background: var(--danger-soft); border-color: var(--danger); color: var(--danger); }
+  .streak-line { font-size: 12.5px; color: var(--muted); font-weight: 600; margin: -2px 0 2px; }
+
+  /* ---- subject color swatches ---- */
+  .swatch-row { display: flex; gap: 10px; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid transparent; padding: 0; }
+  .swatch.selected { border-color: var(--ink); }
+
+  /* ---- subject checklist ---- */
+  .chk-row { display: flex; align-items: center; gap: 8px; padding: 7px 2px; }
+  .chk-row .chk-toggle { width: 20px; height: 20px; border-radius: 6px; border: 2px solid var(--line); background: none; padding: 0; display: flex; align-items: center; justify-content: center; flex: none; color: #fff; }
+  .chk-row .chk-toggle svg { opacity: 0; }
+  .chk-row .chk-toggle.on { background: var(--good); border-color: var(--good); }
+  .chk-row .chk-toggle.on svg { opacity: 1; }
+  .chk-row .chk-text { flex: 1; font-size: 13.5px; }
+  .chk-row .chk-text.done { text-decoration: line-through; color: var(--muted); }
+  .chk-row .chk-del { background: none; border: none; color: var(--muted); font-size: 15px; padding: 2px 6px; flex: none; }
+  .chk-section-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; margin: 8px 0 2px; }
+
+  /* ---- productivity history calendar ---- */
+  .cal-nav { display: flex; align-items: center; gap: 4px; }
+  .cal-month-label { font-size: 12px; font-weight: 700; min-width: 92px; text-align: center; display: inline-block; }
+  .cal-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); padding: 0 12px; font-size: 10px; color: var(--muted); text-align: center; font-weight: 700; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; padding: 6px 12px 14px; }
+  .cal-cell { aspect-ratio: 1; border-radius: 8px; border: none; background: var(--paper); font-size: 11px; font-weight: 700; color: var(--ink); display: flex; align-items: center; justify-content: center; font-family: inherit; }
+  .cal-cell.blank { background: transparent; }
+  .cal-cell.future { color: var(--muted); background: transparent; }
+  .cal-cell.nodata { background: var(--paper); color: var(--muted); }
+  .cal-cell.good { background: var(--good-soft); color: var(--good); }
+  .cal-cell.accent { background: var(--accent-soft); color: var(--accent); }
+  .cal-cell.danger { background: var(--danger-soft); color: var(--danger); }
+  .cal-cell.is-today { box-shadow: inset 0 0 0 2px var(--accent); }
+  .cal-cell.selected { box-shadow: inset 0 0 0 2px var(--ink); }
+  .cal-detail { padding: 0 16px 14px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
+  .cal-detail b { color: var(--ink); }
+
+  .tabbar svg.icon { width: 20px; height: 20px; }
 </style>
 
 <svg style="display:none" aria-hidden="true">
@@ -285,6 +353,10 @@
   <symbol id="icon-alarms" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="12" y2="7"/><line x1="12" y1="12" x2="15.5" y2="14"/></symbol>
   <symbol id="icon-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
   <symbol id="icon-check" viewBox="0 0 24 24"><polyline points="5,12.5 9.5,17 19,7"/></symbol>
+  <symbol id="icon-dash" viewBox="0 0 24 24"><line x1="6" y1="12" x2="18" y2="12"/></symbol>
+  <symbol id="icon-subjects" viewBox="0 0 24 24"><polygon points="12,3 21,8 12,13 3,8"/><polyline points="3,12 12,17 21,12"/><polyline points="3,16 12,21 21,16"/></symbol>
+  <symbol id="icon-chev-l" viewBox="0 0 24 24"><polyline points="15,5 8,12 15,19"/></symbol>
+  <symbol id="icon-chev-r" viewBox="0 0 24 24"><polyline points="9,5 16,12 9,19"/></symbol>
 </svg>
 
 <div class="app tab-today" id="appRoot">
@@ -300,8 +372,25 @@
         <div class="hero-next" id="heroNext">No alarms set</div>
       </div>
 
+      <div class="streaks-row" id="streaksRow"></div>
+
       <section class="card">
-        <div class="card-head"><h2>Due today</h2></div>
+        <div class="card-head"><h2>Today's score</h2></div>
+        <div class="score-body" id="scoreCard"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>This week's focus</h2></div>
+        <div class="graph-row" id="weeklyGraph"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Today's work</h2></div>
+        <div id="todaysWorkList"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Scheduled today</h2></div>
         <div id="dueTodayList"></div>
       </section>
 
@@ -323,6 +412,26 @@
       </section>
     </section>
 
+    <section class="tabpanel" id="tab-subjects" hidden>
+      <section class="card">
+        <div class="card-head"><h2>Subjects</h2></div>
+        <div id="subjectsList"></div>
+      </section>
+      <section class="card">
+        <div class="card-head">
+          <h2>Productivity history</h2>
+          <div class="cal-nav">
+            <button class="icon-btn" id="calPrev" aria-label="Previous month"><svg class="icon sm"><use href="#icon-chev-l"></use></svg></button>
+            <span class="cal-month-label" id="calMonthLabel"></span>
+            <button class="icon-btn" id="calNext" aria-label="Next month"><svg class="icon sm"><use href="#icon-chev-r"></use></svg></button>
+          </div>
+        </div>
+        <div class="cal-weekdays"><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span><span>S</span></div>
+        <div class="cal-grid" id="calGrid"></div>
+        <div class="cal-detail" id="calDetail"></div>
+      </section>
+    </section>
+
     <section class="tabpanel" id="tab-reminders" hidden>
       <div id="remindersList"></div>
     </section>
@@ -341,6 +450,7 @@
   <nav class="tabbar">
     <button data-tab="today" class="active"><svg class="icon"><use href="#icon-today"></use></svg><span>Today</span></button>
     <button data-tab="schedule"><svg class="icon"><use href="#icon-schedule"></use></svg><span>Schedule</span></button>
+    <button data-tab="subjects"><svg class="icon"><use href="#icon-subjects"></use></svg><span>Subjects</span></button>
     <button data-tab="reminders"><svg class="icon"><use href="#icon-reminders"></use></svg><span>Reminders</span><span class="tab-badge" id="remBadge" style="display:none;"></span></button>
     <button data-tab="alarms"><svg class="icon"><use href="#icon-alarms"></use></svg><span>Alarms</span></button>
   </nav>
@@ -436,6 +546,65 @@
     </div>
   </div>
 
+  <!-- subject sheet -->
+  <div class="sheet-backdrop" id="subjectSheetBackdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title" id="subjectSheetTitle">New subject</h2>
+      <div>
+        <span class="field-label">Name</span>
+        <input type="text" id="subjectName" placeholder="e.g. Java practice" maxlength="30" />
+      </div>
+      <div>
+        <span class="field-label">Color</span>
+        <div class="swatch-row" id="subjectSwatches">
+          <button class="swatch" data-c="work" style="background:var(--cat-work)" aria-label="Teal"></button>
+          <button class="swatch" data-c="study" style="background:var(--cat-study)" aria-label="Blue"></button>
+          <button class="swatch" data-c="personal" style="background:var(--cat-personal)" aria-label="Orange"></button>
+          <button class="swatch" data-c="break" style="background:var(--cat-break)" aria-label="Grey"></button>
+          <button class="swatch" data-c="other" style="background:var(--cat-other)" aria-label="Rose"></button>
+          <button class="swatch" data-c="accent" style="background:var(--accent)" aria-label="Amber"></button>
+        </div>
+      </div>
+
+      <div id="subjectExtras" style="display:none;">
+        <div>
+          <span class="field-label">Today's status</span>
+          <div class="status-btns" id="subjectStatusBtns">
+            <button data-s="none">Not done</button>
+            <button data-s="partial">Partial</button>
+            <button data-s="done">Completed</button>
+          </div>
+        </div>
+        <div>
+          <span class="field-label">Minutes focused today</span>
+          <div class="row">
+            <input type="text" inputmode="numeric" id="subjectMinutes" placeholder="0" />
+            <button class="btn-ghost" id="subMinPlus15" style="flex:none;">+15</button>
+            <button class="btn-ghost" id="subMinPlus30" style="flex:none;">+30</button>
+          </div>
+        </div>
+        <div class="streak-line" id="subjectStreakLine"></div>
+
+        <div>
+          <span class="field-label">Checklist — what's done, what's left</span>
+          <div class="row">
+            <input type="text" id="subItemInput" placeholder="Add an item" maxlength="60" />
+            <button class="btn-primary" id="subItemAdd" style="flex:none;">Add</button>
+          </div>
+          <div id="subItemsList"></div>
+        </div>
+
+        <button class="btn-danger" id="subjectDeleteBtn" style="width:100%;">Delete subject</button>
+      </div>
+
+      <div class="row actions">
+        <button class="btn-ghost" id="subjectCancel">Cancel</button>
+        <button class="btn-primary" id="subjectSave">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ringing overlay -->
   <div class="ring-banner" id="ringBanner">
     <div class="ring-card">
@@ -458,7 +627,8 @@
 
   var DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   var DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  var TAB_TITLES = { today: "Today", schedule: "Schedule", reminders: "Reminders", alarms: "Alarms" };
+  var TAB_TITLES = { today: "Today", schedule: "Schedule", subjects: "Subjects", reminders: "Reminders", alarms: "Alarms" };
+  var NEXT_STATUS = { none: "done", done: "partial", partial: "none" };
 
   function pad2(n) { return n < 10 ? "0" + n : "" + n; }
   function todayIdx() { var j = new Date().getDay(); return j === 0 ? 6 : j - 1; }
@@ -500,11 +670,43 @@
   var alarms = store.load("daybreak.alarms", []);
   var reminders = store.load("daybreak.reminders", []);
   var worklog = store.load("daybreak.worklog", {});
+  var subjects = store.load("daybreak.subjects", []);
+  var subjectItems = store.load("daybreak.subjectItems", []);
+  var subjectDay = store.load("daybreak.subjectDay", {});
 
   function saveTasks() { store.save("daybreak.tasks", tasks); }
   function saveAlarms() { store.save("daybreak.alarms", alarms); }
   function saveReminders() { store.save("daybreak.reminders", reminders); }
   function saveWorklog() { store.save("daybreak.worklog", worklog); }
+  function saveSubjects() { store.save("daybreak.subjects", subjects); }
+  function saveSubjectItems() { store.save("daybreak.subjectItems", subjectItems); }
+  function saveSubjectDay() { store.save("daybreak.subjectDay", subjectDay); }
+
+  function subjectColorVar(s) { return s.color === "accent" ? "var(--accent)" : "var(--cat-" + s.color + ")"; }
+
+  function computeDayStats(dk) {
+    var relevant = subjects.filter(function (s) { return (s.createdAt || "0000-00-00") <= dk; });
+    var completed = 0, partial = 0, minutes = 0;
+    relevant.forEach(function (s) {
+      var rec = subjectDay[s.id + "|" + dk];
+      var status = rec ? rec.status : "none";
+      minutes += rec ? (rec.minutes || 0) : 0;
+      if (status === "done") completed++;
+      else if (status === "partial") partial++;
+    });
+    return { planned: relevant.length, completed: completed, partial: partial, missed: relevant.length - completed - partial, minutes: minutes };
+  }
+
+  function computeStreak(subjectId) {
+    var d = new Date();
+    if (!(subjectDay[subjectId + "|" + dateKey(d)] && subjectDay[subjectId + "|" + dateKey(d)].status === "done")) d.setDate(d.getDate() - 1);
+    var streak = 0;
+    while (true) {
+      var k = subjectId + "|" + dateKey(d);
+      if (subjectDay[k] && subjectDay[k].status === "done") { streak++; d.setDate(d.getDate() - 1); } else break;
+    }
+    return streak;
+  }
 
   var appRoot = document.getElementById("appRoot");
   var activeTab = "today";
@@ -513,9 +715,10 @@
   /* ================= tab switching ================= */
   function showTab(name) {
     activeTab = name;
-    ["today", "schedule", "reminders", "alarms"].forEach(function (t) {
+    ["today", "schedule", "subjects", "reminders", "alarms"].forEach(function (t) {
       document.getElementById("tab-" + t).hidden = t !== name;
     });
+    if (name === "subjects") renderCalendar();
     document.querySelectorAll(".tabbar button").forEach(function (b) {
       b.classList.toggle("active", b.dataset.tab === name);
     });
@@ -530,6 +733,7 @@
 
   document.getElementById("fabBtn").addEventListener("click", function () {
     if (activeTab === "schedule") openTaskSheet(null, selectedDay);
+    else if (activeTab === "subjects") openSubjectSheet(null);
     else if (activeTab === "reminders") openRemSheet(null);
     else if (activeTab === "alarms") openAlarmSheet();
   });
@@ -620,6 +824,83 @@
     worklog[tk] = (worklog[tk] || []).filter(function (e) { return e.id !== btn.dataset.id; });
     saveWorklog();
     renderWorklog();
+  });
+
+  /* ================= streaks / score / graph / today's work ================= */
+  function renderStreaks() {
+    var el = document.getElementById("streaksRow");
+    var list = subjects.map(function (s) { return { s: s, n: computeStreak(s.id) }; })
+      .filter(function (x) { return x.n > 0; }).sort(function (a, b) { return b.n - a.n; });
+    if (!list.length) { el.innerHTML = "<div class='empty-note' style='padding:2px 2px 4px;'>Mark a subject Completed each day to start a streak.</div>"; return; }
+    el.innerHTML = list.map(function (x) {
+      return "<div class='streak-chip'><span class='streak-num' style='background:" + subjectColorVar(x.s) + "'>" + x.n + "</span><span class='streak-label'>" + escapeHtml(x.s.name) + "</span></div>";
+    }).join("");
+  }
+
+  function bucketFor(pct) { return pct >= 70 ? "good" : pct >= 40 ? "accent" : "danger"; }
+
+  function renderScoreCard() {
+    var st = computeDayStats(todayKey());
+    var el = document.getElementById("scoreCard");
+    if (st.planned === 0) { el.innerHTML = "<div class='empty-note' style='padding:0;'>Add subjects in the Subjects tab to start tracking your daily score.</div>"; return; }
+    var pct = Math.round(((st.completed + st.partial * 0.5) / st.planned) * 100);
+    var bucket = bucketFor(pct);
+    var h = Math.floor(st.minutes / 60), m = st.minutes % 60;
+    el.innerHTML =
+      "<div class='score-top'><div class='score-pct' style='color:var(--" + bucket + ")'>" + pct + "%</div>" +
+      "<div class='score-bar'><div class='score-bar-fill' style='width:" + pct + "%;background:var(--" + bucket + ")'></div></div></div>" +
+      "<div class='score-stats'>" + st.planned + " planned &middot; " + st.completed + " completed &middot; " + st.missed + " missed &middot; " +
+      (st.minutes > 0 ? ((h > 0 ? h + "h " : "") + m + "m focused") : "0m focused") + "</div>";
+  }
+
+  function renderWeeklyGraph() {
+    var days = [];
+    for (var i = 6; i >= 0; i--) { var d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+    var stats = days.map(function (d) { return computeDayStats(dateKey(d)); });
+    var maxMin = Math.max(1, Math.max.apply(null, stats.map(function (s) { return s.minutes; })));
+    var el = document.getElementById("weeklyGraph");
+    el.innerHTML = days.map(function (d, i) {
+      var h = Math.max(Math.round((stats[i].minutes / maxMin) * 64), 3);
+      var isToday = dateKey(d) === todayKey();
+      var label = DAY_NAMES[d.getDay() === 0 ? 6 : d.getDay() - 1].charAt(0);
+      return "<div class='gbar-col'><div class='gbar-track'><div class='gbar-fill" + (isToday ? " today" : "") + "' style='height:" + h + "px'></div></div><span class='gbar-label'>" + label + "</span></div>";
+    }).join("");
+  }
+
+  function renderTodaysWork() {
+    var dk = todayKey();
+    var el = document.getElementById("todaysWorkList");
+    if (!subjects.length) { el.innerHTML = "<div class='empty-note'>No subjects yet. Open the Subjects tab to add one — Gym, Java practice, a project, anything you want to track daily.</div>"; return; }
+    el.innerHTML = subjects.map(function (s) {
+      var rec = subjectDay[s.id + "|" + dk];
+      var status = rec ? rec.status : "none";
+      var minutes = rec ? (rec.minutes || 0) : 0;
+      var icon = status === "done" ? "<svg class='icon sm'><use href='#icon-check'></use></svg>" : status === "partial" ? "<svg class='icon sm'><use href='#icon-dash'></use></svg>" : "";
+      return "<div class='agenda-row' data-id='" + s.id + "'>" +
+        "<button class='status-check st-" + status + "' data-id='" + s.id + "'>" + icon + "</button>" +
+        "<span class='agenda-dot' style='background:" + subjectColorVar(s) + "'></span>" +
+        "<span class='agenda-title'>" + escapeHtml(s.name) + "</span>" +
+        (minutes > 0 ? "<span class='agenda-time mono'>" + minutes + "m</span>" : "") +
+        "</div>";
+    }).join("");
+  }
+
+  function cycleSubjectStatus(id) {
+    var dk = todayKey();
+    var key = id + "|" + dk;
+    var rec = subjectDay[key] || { status: "none", minutes: 0 };
+    rec.status = NEXT_STATUS[rec.status] || "done";
+    subjectDay[key] = rec;
+    saveSubjectDay();
+    renderTodaysWork(); renderStreaks(); renderScoreCard(); renderWeeklyGraph();
+    if (activeTab === "subjects") renderCalendar();
+  }
+
+  document.getElementById("todaysWorkList").addEventListener("click", function (ev) {
+    var check = ev.target.closest(".status-check");
+    if (check) { cycleSubjectStatus(check.dataset.id); return; }
+    var row = ev.target.closest(".agenda-row");
+    if (row) { var s = subjects.find(function (x) { return x.id === row.dataset.id; }); if (s) openSubjectSheet(s); }
   });
 
   /* ================= schedule tab ================= */
@@ -859,6 +1140,221 @@
     renderReminders(); renderDueToday(); renderBadge();
   });
 
+  /* ================= subjects tab ================= */
+  function renderSubjectsList() {
+    var el = document.getElementById("subjectsList");
+    if (!subjects.length) { el.innerHTML = "<div class='empty-note'>No subjects yet. Tap + to add one — track anything you want to do daily, like Gym, Java practice, or a project.</div>"; return; }
+    el.innerHTML = subjects.map(function (s) {
+      var streak = computeStreak(s.id);
+      return "<div class='agenda-row' data-id='" + s.id + "'>" +
+        "<span class='agenda-dot' style='background:" + subjectColorVar(s) + "'></span>" +
+        "<span class='agenda-title'>" + escapeHtml(s.name) + "</span>" +
+        (streak > 0 ? "<span class='agenda-time'>" + streak + "d streak</span>" : "") +
+        "</div>";
+    }).join("");
+  }
+  document.getElementById("subjectsList").addEventListener("click", function (ev) {
+    var row = ev.target.closest(".agenda-row");
+    if (!row) return;
+    var s = subjects.find(function (x) { return x.id === row.dataset.id; });
+    if (s) openSubjectSheet(s);
+  });
+
+  /* ================= subject sheet ================= */
+  var subjectSheetBackdrop = document.getElementById("subjectSheetBackdrop");
+  var subjectName = document.getElementById("subjectName");
+  var subjectSwatches = document.getElementById("subjectSwatches");
+  var subjectExtras = document.getElementById("subjectExtras");
+  var subjectMinutes = document.getElementById("subjectMinutes");
+  var subjectStatusBtns = document.getElementById("subjectStatusBtns");
+  var editingSubjectId = null;
+  var selectedSubjectColor = "work";
+
+  subjectSwatches.addEventListener("click", function (ev) {
+    var b = ev.target.closest(".swatch"); if (!b) return;
+    selectedSubjectColor = b.dataset.c;
+    subjectSwatches.querySelectorAll(".swatch").forEach(function (x) { x.classList.toggle("selected", x === b); });
+  });
+
+  function refreshSubjectStatusUI() {
+    var rec = subjectDay[editingSubjectId + "|" + todayKey()];
+    var status = rec ? rec.status : "none";
+    subjectStatusBtns.querySelectorAll("button").forEach(function (b) { b.classList.toggle("active", b.dataset.s === status); });
+  }
+  subjectStatusBtns.addEventListener("click", function (ev) {
+    var b = ev.target.closest("button");
+    if (!b || !editingSubjectId) return;
+    var key = editingSubjectId + "|" + todayKey();
+    var rec = subjectDay[key] || { status: "none", minutes: 0 };
+    rec.status = b.dataset.s;
+    subjectDay[key] = rec;
+    saveSubjectDay();
+    refreshSubjectStatusUI();
+    renderTodaysWork(); renderStreaks(); renderScoreCard(); renderWeeklyGraph();
+    document.getElementById("subjectStreakLine").textContent = describeStreak(computeStreak(editingSubjectId));
+  });
+
+  function describeStreak(n) { return n > 0 ? n + " day" + (n > 1 ? "s" : "") + " streak" : "No streak yet"; }
+
+  function commitMinutes() {
+    if (!editingSubjectId) return;
+    var key = editingSubjectId + "|" + todayKey();
+    var rec = subjectDay[key] || { status: "none", minutes: 0 };
+    var v = parseInt(subjectMinutes.value, 10);
+    rec.minutes = isNaN(v) ? 0 : Math.max(0, v);
+    subjectDay[key] = rec;
+    saveSubjectDay();
+    renderScoreCard(); renderWeeklyGraph(); renderTodaysWork();
+  }
+  subjectMinutes.addEventListener("change", commitMinutes);
+  document.getElementById("subMinPlus15").addEventListener("click", function () { subjectMinutes.value = (parseInt(subjectMinutes.value, 10) || 0) + 15; commitMinutes(); });
+  document.getElementById("subMinPlus30").addEventListener("click", function () { subjectMinutes.value = (parseInt(subjectMinutes.value, 10) || 0) + 30; commitMinutes(); });
+
+  function renderSubjectChecklist() {
+    var items = subjectItems.filter(function (it) { return it.subjectId === editingSubjectId; });
+    var remaining = items.filter(function (it) { return !it.done; });
+    var completed = items.filter(function (it) { return it.done; });
+    function row(it) {
+      return "<div class='chk-row'><button class='chk-toggle" + (it.done ? " on" : "") + "' data-id='" + it.id + "'><svg class='icon sm'><use href='#icon-check'></use></svg></button>" +
+        "<span class='chk-text" + (it.done ? " done" : "") + "'>" + escapeHtml(it.text) + "</span>" +
+        "<button class='chk-del' data-id='" + it.id + "'>&times;</button></div>";
+    }
+    document.getElementById("subItemsList").innerHTML =
+      "<div class='chk-section-label'>Remaining</div>" +
+      (remaining.length ? remaining.map(row).join("") : "<div class='empty-note' style='padding:2px;'>Nothing left.</div>") +
+      "<div class='chk-section-label'>Completed</div>" +
+      (completed.length ? completed.map(row).join("") : "<div class='empty-note' style='padding:2px;'>Nothing completed yet.</div>");
+  }
+  document.getElementById("subItemsList").addEventListener("click", function (ev) {
+    var toggle = ev.target.closest(".chk-toggle");
+    if (toggle) {
+      var it = subjectItems.find(function (x) { return x.id === toggle.dataset.id; });
+      if (it) { it.done = !it.done; saveSubjectItems(); renderSubjectChecklist(); }
+      return;
+    }
+    var del = ev.target.closest(".chk-del");
+    if (del) { subjectItems = subjectItems.filter(function (x) { return x.id !== del.dataset.id; }); saveSubjectItems(); renderSubjectChecklist(); }
+  });
+  document.getElementById("subItemAdd").addEventListener("click", addSubjectItem);
+  document.getElementById("subItemInput").addEventListener("keydown", function (ev) { if (ev.key === "Enter") addSubjectItem(); });
+  function addSubjectItem() {
+    var input = document.getElementById("subItemInput");
+    var text = input.value.trim();
+    if (!text || !editingSubjectId) return;
+    subjectItems.push({ id: uid(), subjectId: editingSubjectId, text: text, done: false });
+    saveSubjectItems();
+    input.value = "";
+    renderSubjectChecklist();
+  }
+
+  function openSubjectSheet(existing) {
+    if (existing) {
+      editingSubjectId = existing.id;
+      document.getElementById("subjectSheetTitle").textContent = existing.name;
+      subjectName.value = existing.name;
+      selectedSubjectColor = existing.color;
+      subjectExtras.style.display = "";
+      document.getElementById("subjectDeleteBtn").style.display = "";
+      refreshSubjectStatusUI();
+      var rec = subjectDay[existing.id + "|" + todayKey()];
+      subjectMinutes.value = rec && rec.minutes ? rec.minutes : "";
+      document.getElementById("subjectStreakLine").textContent = describeStreak(computeStreak(existing.id));
+      renderSubjectChecklist();
+    } else {
+      editingSubjectId = null;
+      document.getElementById("subjectSheetTitle").textContent = "New subject";
+      subjectName.value = "";
+      selectedSubjectColor = "work";
+      subjectExtras.style.display = "none";
+    }
+    subjectSwatches.querySelectorAll(".swatch").forEach(function (x) { x.classList.toggle("selected", x.dataset.c === selectedSubjectColor); });
+    subjectSheetBackdrop.classList.add("show");
+    setTimeout(function () { subjectName.focus(); }, 30);
+  }
+  function closeSubjectSheet() { subjectSheetBackdrop.classList.remove("show"); }
+  document.getElementById("subjectCancel").addEventListener("click", closeSubjectSheet);
+  subjectSheetBackdrop.addEventListener("click", function (ev) { if (ev.target === subjectSheetBackdrop) closeSubjectSheet(); });
+
+  function refreshAllSubjectViews() {
+    renderSubjectsList(); renderTodaysWork(); renderStreaks(); renderScoreCard(); renderWeeklyGraph();
+    if (activeTab === "subjects") renderCalendar();
+  }
+
+  document.getElementById("subjectSave").addEventListener("click", function () {
+    var name = subjectName.value.trim();
+    if (!name) { subjectName.focus(); return; }
+    if (editingSubjectId) {
+      var s = subjects.find(function (x) { return x.id === editingSubjectId; });
+      s.name = name; s.color = selectedSubjectColor;
+    } else {
+      subjects.push({ id: uid(), name: name, color: selectedSubjectColor, createdAt: todayKey() });
+    }
+    saveSubjects();
+    closeSubjectSheet();
+    refreshAllSubjectViews();
+  });
+  document.getElementById("subjectDeleteBtn").addEventListener("click", function () {
+    if (!editingSubjectId) return;
+    subjects = subjects.filter(function (x) { return x.id !== editingSubjectId; });
+    subjectItems = subjectItems.filter(function (x) { return x.subjectId !== editingSubjectId; });
+    Object.keys(subjectDay).forEach(function (k) { if (k.indexOf(editingSubjectId + "|") === 0) delete subjectDay[k]; });
+    saveSubjects(); saveSubjectItems(); saveSubjectDay();
+    closeSubjectSheet();
+    refreshAllSubjectViews();
+  });
+
+  /* ================= productivity history calendar ================= */
+  var calMonth = (function () { var d = new Date(); d.setDate(1); return d; })();
+  var calSelected = null;
+
+  function renderCalendar() {
+    var y = calMonth.getFullYear(), m = calMonth.getMonth();
+    document.getElementById("calMonthLabel").textContent = calMonth.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+    var first = new Date(y, m, 1);
+    var offset = first.getDay() === 0 ? 6 : first.getDay() - 1;
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var tk = todayKey();
+    var cells = [];
+    for (var i = 0; i < offset; i++) cells.push("<div class='cal-cell blank'></div>");
+    for (var d = 1; d <= daysInMonth; d++) {
+      var dk = dateKey(new Date(y, m, d));
+      var cls = "cal-cell";
+      var clickable = dk <= tk;
+      if (dk > tk) { cls += " future"; }
+      else {
+        var st = computeDayStats(dk);
+        if (st.planned === 0) cls += " nodata";
+        else cls += " " + bucketFor(Math.round(((st.completed + st.partial * 0.5) / st.planned) * 100));
+      }
+      if (dk === tk) cls += " is-today";
+      if (dk === calSelected) cls += " selected";
+      var tag = clickable ? "button" : "div";
+      cells.push("<" + tag + " class='" + cls + "'" + (clickable ? " data-date='" + dk + "'" : "") + ">" + d + "</" + tag + ">");
+    }
+    document.getElementById("calGrid").innerHTML = cells.join("");
+    renderCalDetail();
+  }
+  document.getElementById("calGrid").addEventListener("click", function (ev) {
+    var cell = ev.target.closest("[data-date]");
+    if (!cell) return;
+    calSelected = calSelected === cell.dataset.date ? null : cell.dataset.date;
+    renderCalendar();
+  });
+  document.getElementById("calPrev").addEventListener("click", function () { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() - 1, 1); renderCalendar(); });
+  document.getElementById("calNext").addEventListener("click", function () { calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth() + 1, 1); renderCalendar(); });
+
+  function renderCalDetail() {
+    var el = document.getElementById("calDetail");
+    if (!calSelected) { el.innerHTML = ""; return; }
+    var st = computeDayStats(calSelected);
+    if (st.planned === 0) { el.innerHTML = "<b>" + relDateLabel(calSelected) + "</b> &mdash; no subjects tracked."; return; }
+    var missedRem = reminders.filter(function (r) { return r.date === calSelected && !r.completed; }).length;
+    var h = Math.floor(st.minutes / 60), mi = st.minutes % 60;
+    el.innerHTML = "<b>" + relDateLabel(calSelected) + "</b> &mdash; " + st.planned + " planned, " + st.completed + " completed, " +
+      (st.minutes > 0 ? ((h > 0 ? h + "h " : "") + mi + "m focused") : "0m focused") +
+      (missedRem > 0 ? ", " + missedRem + " reminder" + (missedRem > 1 ? "s" : "") + " missed" : "");
+  }
+
   /* ================= alarms tab ================= */
   var alarmSheetBackdrop = document.getElementById("alarmSheetBackdrop");
   var alarmDaysEl = document.getElementById("alarmDays");
@@ -1046,6 +1542,12 @@
   renderAlarms();
   renderHeroNext();
   renderBadge();
+  renderSubjectsList();
+  renderTodaysWork();
+  renderStreaks();
+  renderScoreCard();
+  renderWeeklyGraph();
+  renderCalendar();
   tickClock();
   showTab("today");
 
