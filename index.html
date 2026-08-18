@@ -1,0 +1,1057 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#eef0f2">
+<title>Daybreak</title>
+<style>
+  :root {
+    --paper: #eef0f2;
+    --paper-raised: #ffffff;
+    --ink: #14181f;
+    --muted: #5b6470;
+    --line: #cdd3da;
+    --line-soft: #dfe3e8;
+    --accent: #d98c26;
+    --accent-ink: #14181f;
+    --accent-soft: #f4dcb3;
+    --good: #3d7a5e;
+    --good-soft: #d9ebe2;
+    --danger: #b0503b;
+    --danger-soft: #f3d9d0;
+    --shadow: 0 1px 2px rgba(20,24,31,0.06), 0 8px 24px -12px rgba(20,24,31,0.18);
+    --shadow-lg: 0 30px 70px -20px rgba(20,24,31,0.35);
+    --cat-work: #3d7a5e;
+    --cat-study: #5b6fa3;
+    --cat-personal: #b3673a;
+    --cat-break: #7a7f88;
+    --cat-other: #a34c6b;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #12151a;
+      --paper-raised: #1a1e25;
+      --ink: #e8e6e1;
+      --muted: #9298a3;
+      --line: #2a2f38;
+      --line-soft: #21252c;
+      --accent: #e6a94c;
+      --accent-ink: #14181f;
+      --accent-soft: #4a3a1c;
+      --good: #5fa382;
+      --good-soft: #1e332a;
+      --danger: #d97b62;
+      --danger-soft: #4a2620;
+      --cat-work: #5fa382;
+      --cat-study: #8896c9;
+      --cat-personal: #d2905e;
+      --cat-break: #9298a3;
+      --cat-other: #c97b98;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+      --shadow-lg: 0 30px 70px -20px rgba(0,0,0,0.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #12151a;
+    --paper-raised: #1a1e25;
+    --ink: #e8e6e1;
+    --muted: #9298a3;
+    --line: #2a2f38;
+    --line-soft: #21252c;
+    --accent: #e6a94c;
+    --accent-ink: #14181f;
+    --accent-soft: #4a3a1c;
+    --good: #5fa382;
+    --good-soft: #1e332a;
+    --danger: #d97b62;
+    --danger-soft: #4a2620;
+    --cat-work: #5fa382;
+    --cat-study: #8896c9;
+    --cat-personal: #d2905e;
+    --cat-break: #9298a3;
+    --cat-other: #c97b98;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
+    --shadow-lg: 0 30px 70px -20px rgba(0,0,0,0.7);
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: -apple-system, "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100dvh;
+  }
+  .mono { font-family: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace; font-variant-numeric: tabular-nums; }
+  button { touch-action: manipulation; }
+  @media (prefers-reduced-motion: reduce) { * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; } }
+
+  svg.icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+  svg.icon.sm { width: 16px; height: 16px; }
+
+  /* ---- phone frame ---- */
+  .app {
+    width: 100%;
+    max-width: 428px;
+    height: 100dvh;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    contain: layout;
+  }
+  @media (min-width: 560px) {
+    body { padding: 32px 16px; align-items: center; }
+    .app {
+      height: 844px;
+      max-height: 92vh;
+      border-radius: 44px;
+      box-shadow: var(--shadow-lg);
+      border: 1px solid var(--line-soft);
+    }
+  }
+
+  /* ---- top bar ---- */
+  .topbar {
+    flex: 0 0 auto;
+    padding: max(18px, env(safe-area-inset-top)) 20px 10px;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line-soft);
+  }
+  .topbar h1 { font-size: 28px; font-weight: 800; letter-spacing: -0.01em; margin: 0; text-wrap: balance; }
+
+  main.content { flex: 1 1 auto; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 16px 16px calc(24px + env(safe-area-inset-bottom)); }
+  main.content.no-scroll-pad { padding-bottom: 16px; }
+  .tabpanel { display: flex; flex-direction: column; gap: 14px; }
+  .tabpanel[hidden] { display: none; }
+
+  /* ---- hero (today) ---- */
+  .hero { padding: 6px 4px 4px; }
+  .hero-date { font-size: 13px; color: var(--muted); font-weight: 600; }
+  .hero-clock { font-size: 44px; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+  .hero-clock .secs { color: var(--muted); font-size: 24px; }
+  .hero-next { margin-top: 6px; font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .hero-next b { color: var(--ink); font-weight: 700; }
+
+  /* ---- cards ---- */
+  .card { background: var(--paper-raised); border: 1px solid var(--line-soft); border-radius: 16px; box-shadow: var(--shadow); overflow: hidden; }
+  .card-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 10px; }
+  .card-head h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; margin: 0; color: var(--muted); }
+  .card-head .count { font-size: 11.5px; color: var(--muted); }
+  .empty-note { padding: 4px 16px 16px; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  /* ---- agenda rows (tasks / due today) ---- */
+  .agenda-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line-soft); cursor: pointer; }
+  .agenda-row:first-child { border-top: none; }
+  .agenda-row:active { background: var(--paper); }
+  .agenda-dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .agenda-check { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: flex; align-items: center; justify-content: center; background: none; padding: 0; color: var(--paper-raised); }
+  .agenda-check.on { background: var(--good); border-color: var(--good); }
+  .agenda-check svg { opacity: 0; }
+  .agenda-check.on svg { opacity: 1; }
+  .agenda-title { font-size: 14.5px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agenda-title.done { text-decoration: line-through; color: var(--muted); font-weight: 500; }
+  .agenda-time { font-size: 12px; color: var(--muted); flex: none; }
+
+  /* ---- work log ---- */
+  .wl-add { display: flex; gap: 8px; padding: 12px 16px 12px; border-top: 1px solid var(--line-soft); }
+  .wl-add input { flex: 1; }
+  .wl-list { display: flex; flex-direction: column; }
+  .wl-row { display: flex; align-items: baseline; gap: 10px; padding: 9px 16px; border-top: 1px solid var(--line-soft); }
+  .wl-time { font-size: 11.5px; color: var(--muted); flex: none; width: 46px; }
+  .wl-text { font-size: 14px; flex: 1; word-break: break-word; }
+  .wl-del { background: none; border: none; color: var(--muted); font-size: 13px; padding: 2px 4px; flex: none; }
+
+  /* ---- day pills (schedule) ---- */
+  .daypills { display: flex; gap: 6px; padding: 2px 4px 4px; }
+  .daypill { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; background: var(--paper-raised); border: 1px solid var(--line-soft); border-radius: 12px; padding: 9px 0 7px; font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; }
+  .daypill .d { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .daypill.active { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .daypill.active .d { color: var(--accent-ink); }
+  .daypill .tdot { width: 4px; height: 4px; border-radius: 50%; background: var(--accent); visibility: hidden; }
+  .daypill.is-today .tdot { visibility: visible; }
+  .daypill.active .tdot { background: var(--accent-ink); }
+
+  /* ---- reminders ---- */
+  .rem-section-title { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; color: var(--muted); padding: 4px 4px; }
+  .rem-row { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-top: 1px solid var(--line-soft); cursor: pointer; }
+  .rem-row:first-child { border-top: none; }
+  .rem-row:active { background: var(--paper); }
+  .rem-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); flex: none; display: flex; align-items: center; justify-content: center; background: none; padding: 0; color: #fff; }
+  .rem-check.on { background: var(--good); border-color: var(--good); }
+  .rem-check svg { opacity: 0; }
+  .rem-check.on svg { opacity: 1; }
+  .rem-body { flex: 1; min-width: 0; }
+  .rem-title { font-size: 14.5px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rem-title.done { text-decoration: line-through; color: var(--muted); font-weight: 500; }
+  .rem-meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  .rem-meta.overdue { color: var(--danger); font-weight: 600; }
+  .rem-del { background: none; border: none; color: var(--muted); font-size: 18px; padding: 4px 6px; flex: none; }
+  .completed-toggle { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; cursor: pointer; }
+  .completed-toggle .lbl { font-size: 13px; font-weight: 700; color: var(--muted); }
+  .completed-toggle svg { transition: transform .15s; color: var(--muted); }
+  .completed-toggle.open svg { transform: rotate(90deg); }
+  .completed-body { display: none; }
+  .completed-body.open { display: block; }
+
+  /* ---- alarm list ---- */
+  .alarm-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; border-top: 1px solid var(--line-soft); }
+  .alarm-item:first-child { border-top: none; }
+  .alarm-item.disabled { opacity: 0.45; }
+  .alarm-item .time { font-size: 17px; font-weight: 700; font-family: ui-monospace, monospace; min-width: 64px; }
+  .alarm-item .meta { flex: 1; min-width: 0; }
+  .alarm-item .label { font-size: 12.5px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alarm-item .days { font-size: 10.5px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.03em; }
+
+  .switch { position: relative; width: 38px; height: 23px; flex: none; }
+  .switch input { opacity: 0; width: 0; height: 0; position: absolute; }
+  .switch .track { position: absolute; inset: 0; background: var(--line); border-radius: 999px; cursor: pointer; transition: background .15s; }
+  .switch .track::before { content: ""; position: absolute; width: 17px; height: 17px; left: 3px; top: 3px; background: var(--paper-raised); border-radius: 50%; transition: transform .15s; box-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+  .switch input:checked + .track { background: var(--good); }
+  .switch input:checked + .track::before { transform: translateX(15px); }
+  .icon-btn { background: none; border: none; color: var(--muted); font-size: 15px; padding: 4px 6px; flex: none; }
+
+  /* ---- inputs / buttons ---- */
+  input[type="text"], input[type="time"], input[type="date"], select {
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--ink);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 16px;
+    font-family: inherit;
+    width: 100%;
+  }
+  input[type="time"], input[type="date"] { font-family: ui-monospace, monospace; }
+  .row { display: flex; gap: 8px; }
+  button { font-family: inherit; font-size: 14px; font-weight: 700; border-radius: 10px; border: 1px solid transparent; padding: 11px 14px; cursor: pointer; }
+  button:active { transform: scale(0.97); }
+  button:focus-visible, .daypill:focus-visible, .agenda-row:focus-visible, .rem-row:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .btn-primary { background: var(--accent); color: var(--accent-ink); }
+  .btn-good { background: var(--good); color: #fff; }
+  .btn-ghost { background: transparent; border-color: var(--line); color: var(--ink); }
+  .btn-danger { background: var(--danger-soft); color: var(--danger); }
+  .daychips { display: flex; gap: 5px; flex-wrap: wrap; }
+  .daychip { font-size: 11px; font-weight: 700; border: 1px solid var(--line); background: var(--paper); color: var(--muted); border-radius: 999px; width: 32px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; user-select: none; }
+  .daychip.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .field-label { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; margin-bottom: 5px; display: block; }
+  .toggle-row { display: flex; align-items: center; justify-content: space-between; padding: 2px 0; }
+  .toggle-row .lbl { font-size: 14px; font-weight: 600; }
+
+  /* ---- tab bar ---- */
+  .tabbar { flex: 0 0 auto; display: flex; border-top: 1px solid var(--line-soft); background: var(--paper-raised); padding: 8px 4px max(8px, env(safe-area-inset-bottom)); }
+  .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-size: 10.5px; font-weight: 700; padding: 4px 2px; position: relative; }
+  .tabbar button.active { color: var(--accent); }
+  .tab-badge { position: absolute; top: -1px; right: 22%; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 9.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+
+  /* ---- FAB ---- */
+  .fab { position: fixed; right: 22px; bottom: 84px; width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px -6px rgba(20,24,31,0.4); z-index: 20; }
+  .fab svg { width: 24px; height: 24px; }
+  .app.tab-today .fab { display: none; }
+
+  /* ---- sheets ---- */
+  .sheet-backdrop { position: fixed; inset: 0; background: rgba(20,24,31,0.5); z-index: 40; display: none; align-items: flex-end; }
+  .sheet-backdrop.show { display: flex; }
+  .sheet { width: 100%; background: var(--paper-raised); border-radius: 20px 20px 0 0; padding: 10px 20px calc(20px + env(safe-area-inset-bottom)); display: flex; flex-direction: column; gap: 12px; max-height: 86%; overflow-y: auto; animation: sheetUp .22s ease; }
+  @keyframes sheetUp { from { transform: translateY(24px); opacity: 0.6; } to { transform: translateY(0); opacity: 1; } }
+  .sheet-handle { width: 36px; height: 4px; border-radius: 999px; background: var(--line); margin: 4px auto 2px; }
+  .sheet-title { font-size: 17px; font-weight: 800; margin: 0 0 2px; }
+  .sheet .row.actions { margin-top: 4px; }
+  .sheet .row.actions button { flex: 1; }
+
+  /* ---- ring overlay ---- */
+  .ring-banner { position: fixed; inset: 0; z-index: 50; background: rgba(20,24,31,0.55); display: none; align-items: center; justify-content: center; padding: 20px; }
+  .ring-banner.show { display: flex; }
+  .ring-card { background: var(--paper-raised); border-radius: 18px; padding: 28px 30px; text-align: center; max-width: 300px; box-shadow: 0 20px 60px -10px rgba(0,0,0,0.5); animation: pop .25s ease; }
+  @keyframes pop { from { transform: scale(0.92); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .ring-icon { color: var(--accent); }
+  .ring-icon svg { width: 40px; height: 40px; animation: ring 0.5s infinite; }
+  @keyframes ring { 0%, 100% { transform: rotate(0deg); } 25% { transform: rotate(-12deg); } 75% { transform: rotate(12deg); } }
+  .ring-time { font-size: 32px; font-weight: 700; font-family: ui-monospace, monospace; margin: 8px 0 2px; }
+  .ring-label { font-size: 15px; color: var(--muted); margin-bottom: 18px; }
+  .ring-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ring-actions button { flex: 1; min-width: 40%; }
+</style>
+
+<svg style="display:none" aria-hidden="true">
+  <symbol id="icon-today" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></symbol>
+  <symbol id="icon-schedule" viewBox="0 0 24 24"><circle cx="5" cy="7" r="1.3" fill="currentColor" stroke="none"/><line x1="9.5" y1="7" x2="20" y2="7"/><circle cx="5" cy="13" r="1.3" fill="currentColor" stroke="none"/><line x1="9.5" y1="13" x2="20" y2="13"/><circle cx="5" cy="19" r="1.3" fill="currentColor" stroke="none"/><line x1="9.5" y1="19" x2="20" y2="19"/></symbol>
+  <symbol id="icon-reminders" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><polyline points="8,12.5 10.8,15.3 16,9.5"/></symbol>
+  <symbol id="icon-alarms" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="12" x2="12" y2="7"/><line x1="12" y1="12" x2="15.5" y2="14"/></symbol>
+  <symbol id="icon-plus" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></symbol>
+  <symbol id="icon-check" viewBox="0 0 24 24"><polyline points="5,12.5 9.5,17 19,7"/></symbol>
+</svg>
+
+<div class="app tab-today" id="appRoot">
+
+  <header class="topbar"><h1 id="topbarTitle">Today</h1></header>
+
+  <main class="content">
+
+    <section class="tabpanel" id="tab-today">
+      <div class="hero">
+        <div class="hero-date" id="heroDate">—</div>
+        <div class="hero-clock mono"><span id="heroTime">--:--</span><span class="secs" id="heroSecs">:--</span></div>
+        <div class="hero-next" id="heroNext">No alarms set</div>
+      </div>
+
+      <section class="card">
+        <div class="card-head"><h2>Due today</h2></div>
+        <div id="dueTodayList"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Work log</h2></div>
+        <div class="wl-add">
+          <input type="text" id="wlInput" placeholder="What did you work on?" maxlength="120" />
+          <button class="btn-primary" id="wlAddBtn">Add</button>
+        </div>
+        <div class="wl-list" id="wlList"></div>
+      </section>
+    </section>
+
+    <section class="tabpanel" id="tab-schedule" hidden>
+      <div class="daypills" id="daypills"></div>
+      <section class="card">
+        <div class="card-head"><h2 id="scheduleDayHeading">Monday</h2></div>
+        <div id="scheduleList"></div>
+      </section>
+    </section>
+
+    <section class="tabpanel" id="tab-reminders" hidden>
+      <div id="remindersList"></div>
+    </section>
+
+    <section class="tabpanel" id="tab-alarms" hidden>
+      <section class="card">
+        <div class="card-head"><h2>Alarms</h2></div>
+        <div id="alarmList"></div>
+      </section>
+    </section>
+
+  </main>
+
+  <button class="fab" id="fabBtn" aria-label="Add"><svg class="icon"><use href="#icon-plus"></use></svg></button>
+
+  <nav class="tabbar">
+    <button data-tab="today" class="active"><svg class="icon"><use href="#icon-today"></use></svg><span>Today</span></button>
+    <button data-tab="schedule"><svg class="icon"><use href="#icon-schedule"></use></svg><span>Schedule</span></button>
+    <button data-tab="reminders"><svg class="icon"><use href="#icon-reminders"></use></svg><span>Reminders</span><span class="tab-badge" id="remBadge" style="display:none;"></span></button>
+    <button data-tab="alarms"><svg class="icon"><use href="#icon-alarms"></use></svg><span>Alarms</span></button>
+  </nav>
+
+  <!-- task sheet -->
+  <div class="sheet-backdrop" id="taskSheetBackdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title" id="taskSheetTitle">New task</h2>
+      <div>
+        <span class="field-label">Title</span>
+        <input type="text" id="taskTitle" placeholder="e.g. Chemistry lecture" maxlength="40" />
+      </div>
+      <div>
+        <span class="field-label">Day</span>
+        <div class="daychips" id="taskDayChips">
+          <div class="daychip" data-d="0">M</div><div class="daychip" data-d="1">T</div><div class="daychip" data-d="2">W</div>
+          <div class="daychip" data-d="3">T</div><div class="daychip" data-d="4">F</div><div class="daychip" data-d="5">S</div><div class="daychip" data-d="6">S</div>
+        </div>
+      </div>
+      <div class="row">
+        <div style="flex:1;"><span class="field-label">Start</span><input type="time" id="taskStart" /></div>
+        <div style="flex:1;"><span class="field-label">End</span><input type="time" id="taskEnd" /></div>
+      </div>
+      <div>
+        <span class="field-label">Category</span>
+        <select id="taskCat">
+          <option value="work">Work</option><option value="study">Study</option><option value="personal">Personal</option>
+          <option value="break">Break</option><option value="other">Other</option>
+        </select>
+      </div>
+      <div class="row actions">
+        <button class="btn-ghost" id="taskCancel">Cancel</button>
+        <button class="btn-danger" id="taskDelete" style="display:none;">Delete</button>
+        <button class="btn-primary" id="taskSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- reminder sheet -->
+  <div class="sheet-backdrop" id="remSheetBackdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title" id="remSheetTitle">New reminder</h2>
+      <div>
+        <span class="field-label">Title</span>
+        <input type="text" id="remTitle" placeholder="e.g. Submit report" maxlength="60" />
+      </div>
+      <div>
+        <span class="field-label">Date</span>
+        <input type="date" id="remDate" />
+      </div>
+      <div class="toggle-row">
+        <span class="lbl">Remind me at a time</span>
+        <label class="switch"><input type="checkbox" id="remTimeToggle" /><span class="track"></span></label>
+      </div>
+      <div id="remTimeWrap" style="display:none;">
+        <input type="time" id="remTime" />
+      </div>
+      <div class="row actions">
+        <button class="btn-ghost" id="remCancel">Cancel</button>
+        <button class="btn-danger" id="remDelete" style="display:none;">Delete</button>
+        <button class="btn-primary" id="remSave">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- alarm sheet -->
+  <div class="sheet-backdrop" id="alarmSheetBackdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">New alarm</h2>
+      <div>
+        <span class="field-label">Label</span>
+        <input type="text" id="alarmLabel" placeholder="e.g. Wake up" maxlength="40" />
+      </div>
+      <div>
+        <span class="field-label">Time</span>
+        <input type="time" id="alarmTime" value="07:00" />
+      </div>
+      <div>
+        <span class="field-label">Repeat</span>
+        <div class="daychips" id="alarmDays">
+          <div class="daychip" data-d="0">M</div><div class="daychip" data-d="1">T</div><div class="daychip" data-d="2">W</div>
+          <div class="daychip" data-d="3">T</div><div class="daychip" data-d="4">F</div><div class="daychip" data-d="5">S</div><div class="daychip" data-d="6">S</div>
+        </div>
+        <div class="empty-note" style="padding:6px 0 0;">No days selected = rings once, then turns off</div>
+      </div>
+      <div class="row actions">
+        <button class="btn-ghost" id="alarmCancel">Cancel</button>
+        <button class="btn-primary" id="addAlarmBtn">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ringing overlay -->
+  <div class="ring-banner" id="ringBanner">
+    <div class="ring-card">
+      <div class="ring-icon"><svg class="icon"><use href="#icon-alarms"></use></svg></div>
+      <div class="ring-time mono" id="ringTime">07:00</div>
+      <div class="ring-label" id="ringLabel">Alarm</div>
+      <div class="ring-actions">
+        <button class="btn-ghost" id="snoozeBtn">Snooze 5m</button>
+        <button class="btn-good" id="doneBtn" style="display:none;">Mark done</button>
+        <button class="btn-primary" id="dismissBtn">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  var DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+  var TAB_TITLES = { today: "Today", schedule: "Schedule", reminders: "Reminders", alarms: "Alarms" };
+
+  function pad2(n) { return n < 10 ? "0" + n : "" + n; }
+  function todayIdx() { var j = new Date().getDay(); return j === 0 ? 6 : j - 1; }
+  function minsOf(hhmm) { var p = hhmm.split(":"); return (+p[0]) * 60 + (+p[1]); }
+  function fmtHHMM(mins) { var h = Math.floor(mins / 60) % 24, m = mins % 60; return pad2(h) + ":" + pad2(m); }
+  function to12(hhmm) {
+    var p = hhmm.split(":"), h = +p[0], m = p[1];
+    var suf = h >= 12 ? "PM" : "AM";
+    var h12 = h % 12; if (h12 === 0) h12 = 12;
+    return h12 + ":" + m + " " + suf;
+  }
+  function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  function dateKey(d) { return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); }
+  function todayKey() { return dateKey(new Date()); }
+  function parseKey(k) { var p = k.split("-"); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function relDateLabel(k) {
+    var t = todayKey();
+    if (k === t) return "Today";
+    var d = parseKey(k), now = parseKey(t);
+    var diffDays = Math.round((d - now) / 86400000);
+    if (diffDays === 1) return "Tomorrow";
+    if (diffDays === -1) return "Yesterday";
+    var opts = { month: "short", day: "numeric" };
+    if (d.getFullYear() !== now.getFullYear()) opts.year = "numeric";
+    return d.toLocaleDateString(undefined, opts);
+  }
+
+  var store = {
+    load: function (k, fallback) { try { var v = JSON.parse(localStorage.getItem(k)); return v || fallback; } catch (e) { return fallback; } },
+    save: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+  };
+
+  var tasks = store.load("daybreak.tasks", []);
+  var alarms = store.load("daybreak.alarms", []);
+  var reminders = store.load("daybreak.reminders", []);
+  var worklog = store.load("daybreak.worklog", {});
+
+  function saveTasks() { store.save("daybreak.tasks", tasks); }
+  function saveAlarms() { store.save("daybreak.alarms", alarms); }
+  function saveReminders() { store.save("daybreak.reminders", reminders); }
+  function saveWorklog() { store.save("daybreak.worklog", worklog); }
+
+  var appRoot = document.getElementById("appRoot");
+  var activeTab = "today";
+  var selectedDay = todayIdx();
+
+  /* ================= tab switching ================= */
+  function showTab(name) {
+    activeTab = name;
+    ["today", "schedule", "reminders", "alarms"].forEach(function (t) {
+      document.getElementById("tab-" + t).hidden = t !== name;
+    });
+    document.querySelectorAll(".tabbar button").forEach(function (b) {
+      b.classList.toggle("active", b.dataset.tab === name);
+    });
+    document.getElementById("topbarTitle").textContent = TAB_TITLES[name];
+    appRoot.className = "app tab-" + name;
+    document.querySelector("main.content").scrollTop = 0;
+  }
+  document.querySelector(".tabbar").addEventListener("click", function (ev) {
+    var btn = ev.target.closest("button[data-tab]");
+    if (btn) showTab(btn.dataset.tab);
+  });
+
+  document.getElementById("fabBtn").addEventListener("click", function () {
+    if (activeTab === "schedule") openTaskSheet(null, selectedDay);
+    else if (activeTab === "reminders") openRemSheet(null);
+    else if (activeTab === "alarms") openAlarmSheet();
+  });
+
+  /* ================= clock ================= */
+  function tickClock() {
+    var d = new Date();
+    document.getElementById("heroTime").textContent = pad2(d.getHours()) + ":" + pad2(d.getMinutes());
+    document.getElementById("heroSecs").textContent = ":" + pad2(d.getSeconds());
+    document.getElementById("heroDate").textContent = DAY_FULL[todayIdx()] + " · " + d.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
+  }
+
+  /* ================= today: due list ================= */
+  function renderDueToday() {
+    var ti = todayIdx(), tk = todayKey();
+    var items = [];
+    tasks.filter(function (t) { return t.day === ti; }).forEach(function (t) {
+      items.push({ kind: "task", sort: minsOf(t.start), ref: t });
+    });
+    reminders.filter(function (r) { return r.date === tk && !r.completed; }).forEach(function (r) {
+      items.push({ kind: "reminder", sort: r.time ? minsOf(r.time) : -1, ref: r });
+    });
+    items.sort(function (a, b) { return a.sort - b.sort; });
+
+    var el = document.getElementById("dueTodayList");
+    if (!items.length) { el.innerHTML = "<div class='empty-note'>Nothing due today.</div>"; return; }
+    el.innerHTML = items.map(function (it) {
+      if (it.kind === "task") {
+        var t = it.ref;
+        return "<div class='agenda-row' data-kind='task' data-id='" + t.id + "'>" +
+          "<span class='agenda-dot' style='background:var(--cat-" + t.cat + ")'></span>" +
+          "<span class='agenda-title'>" + escapeHtml(t.title) + "</span>" +
+          "<span class='agenda-time mono'>" + t.start + "</span></div>";
+      }
+      var r = it.ref;
+      return "<div class='agenda-row' data-kind='reminder' data-id='" + r.id + "'>" +
+        "<button class='agenda-check' data-id='" + r.id + "'><svg class='icon sm'><use href='#icon-check'></use></svg></button>" +
+        "<span class='agenda-title'>" + escapeHtml(r.title) + "</span>" +
+        "<span class='agenda-time mono'>" + (r.time ? to12(r.time) : "All day") + "</span></div>";
+    }).join("");
+  }
+
+  document.getElementById("dueTodayList").addEventListener("click", function (ev) {
+    var check = ev.target.closest(".agenda-check");
+    if (check) { toggleReminderComplete(check.dataset.id); return; }
+    var row = ev.target.closest(".agenda-row");
+    if (!row) return;
+    if (row.dataset.kind === "task") {
+      var t = tasks.find(function (x) { return x.id === row.dataset.id; });
+      if (t) openTaskSheet(t, t.day);
+    } else {
+      var r = reminders.find(function (x) { return x.id === row.dataset.id; });
+      if (r) openRemSheet(r);
+    }
+  });
+
+  /* ================= work log ================= */
+  function renderWorklog() {
+    var tk = todayKey();
+    var entries = worklog[tk] || [];
+    var el = document.getElementById("wlList");
+    if (!entries.length) { el.innerHTML = "<div class='empty-note'>Nothing logged yet today.</div>"; return; }
+    var sorted = entries.slice().reverse();
+    el.innerHTML = sorted.map(function (e) {
+      return "<div class='wl-row'><span class='wl-time mono'>" + e.time + "</span>" +
+        "<span class='wl-text'>" + escapeHtml(e.text) + "</span>" +
+        "<button class='wl-del' data-id='" + e.id + "' aria-label='Delete'>&times;</button></div>";
+    }).join("");
+  }
+  document.getElementById("wlAddBtn").addEventListener("click", addWorklogEntry);
+  document.getElementById("wlInput").addEventListener("keydown", function (ev) { if (ev.key === "Enter") addWorklogEntry(); });
+  function addWorklogEntry() {
+    var input = document.getElementById("wlInput");
+    var text = input.value.trim();
+    if (!text) return;
+    var tk = todayKey();
+    var d = new Date();
+    if (!worklog[tk]) worklog[tk] = [];
+    worklog[tk].push({ id: uid(), time: pad2(d.getHours()) + ":" + pad2(d.getMinutes()), text: text });
+    saveWorklog();
+    input.value = "";
+    renderWorklog();
+  }
+  document.getElementById("wlList").addEventListener("click", function (ev) {
+    var btn = ev.target.closest(".wl-del");
+    if (!btn) return;
+    var tk = todayKey();
+    worklog[tk] = (worklog[tk] || []).filter(function (e) { return e.id !== btn.dataset.id; });
+    saveWorklog();
+    renderWorklog();
+  });
+
+  /* ================= schedule tab ================= */
+  function renderDaypills() {
+    var ti = todayIdx();
+    var el = document.getElementById("daypills");
+    el.innerHTML = DAY_NAMES.map(function (name, i) {
+      return "<div class='daypill" + (i === selectedDay ? " active" : "") + (i === ti ? " is-today" : "") + "' data-d='" + i + "'>" +
+        "<span class='d'>" + name.charAt(0) + "</span><span class='tdot'></span></div>";
+    }).join("");
+  }
+  document.getElementById("daypills").addEventListener("click", function (ev) {
+    var pill = ev.target.closest(".daypill");
+    if (!pill) return;
+    selectedDay = +pill.dataset.d;
+    renderDaypills();
+    renderSchedule();
+  });
+
+  function renderSchedule() {
+    document.getElementById("scheduleDayHeading").textContent = DAY_FULL[selectedDay];
+    var items = tasks.filter(function (t) { return t.day === selectedDay; }).sort(function (a, b) { return minsOf(a.start) - minsOf(b.start); });
+    var el = document.getElementById("scheduleList");
+    if (!items.length) { el.innerHTML = "<div class='empty-note'>No tasks on " + DAY_FULL[selectedDay] + ". Tap + to add one.</div>"; return; }
+    el.innerHTML = items.map(function (t) {
+      return "<div class='agenda-row' data-id='" + t.id + "'>" +
+        "<span class='agenda-dot' style='background:var(--cat-" + t.cat + ")'></span>" +
+        "<span class='agenda-title'>" + escapeHtml(t.title) + "</span>" +
+        "<span class='agenda-time mono'>" + to12(t.start) + "&ndash;" + to12(t.end) + "</span></div>";
+    }).join("");
+  }
+  document.getElementById("scheduleList").addEventListener("click", function (ev) {
+    var row = ev.target.closest(".agenda-row");
+    if (!row) return;
+    var t = tasks.find(function (x) { return x.id === row.dataset.id; });
+    if (t) openTaskSheet(t, t.day);
+  });
+
+  /* ================= task sheet ================= */
+  var taskSheetBackdrop = document.getElementById("taskSheetBackdrop");
+  var taskTitle = document.getElementById("taskTitle");
+  var taskStart = document.getElementById("taskStart");
+  var taskEnd = document.getElementById("taskEnd");
+  var taskCat = document.getElementById("taskCat");
+  var taskDelete = document.getElementById("taskDelete");
+  var taskDayChips = document.getElementById("taskDayChips");
+  var editingTaskId = null, taskDay = 0;
+
+  function setTaskDayChip(day) {
+    taskDay = day;
+    taskDayChips.querySelectorAll(".daychip").forEach(function (c) { c.classList.toggle("on", +c.dataset.d === day); });
+  }
+  taskDayChips.addEventListener("click", function (ev) {
+    var chip = ev.target.closest(".daychip");
+    if (!chip) return;
+    setTaskDayChip(+chip.dataset.d);
+  });
+
+  function openTaskSheet(existing, day) {
+    if (existing) {
+      editingTaskId = existing.id;
+      document.getElementById("taskSheetTitle").textContent = "Edit task";
+      taskTitle.value = existing.title;
+      taskStart.value = existing.start;
+      taskEnd.value = existing.end;
+      taskCat.value = existing.cat;
+      setTaskDayChip(existing.day);
+      taskDelete.style.display = "";
+    } else {
+      editingTaskId = null;
+      document.getElementById("taskSheetTitle").textContent = "New task";
+      taskTitle.value = "";
+      var hour = new Date().getHours();
+      taskStart.value = pad2(hour) + ":00";
+      taskEnd.value = pad2((hour + 1) % 24) + ":00";
+      taskCat.value = "work";
+      setTaskDayChip(day != null ? day : selectedDay);
+      taskDelete.style.display = "none";
+    }
+    taskSheetBackdrop.classList.add("show");
+    setTimeout(function () { taskTitle.focus(); }, 30);
+  }
+  function closeTaskSheet() { taskSheetBackdrop.classList.remove("show"); }
+  document.getElementById("taskCancel").addEventListener("click", closeTaskSheet);
+  taskSheetBackdrop.addEventListener("click", function (ev) { if (ev.target === taskSheetBackdrop) closeTaskSheet(); });
+
+  document.getElementById("taskSave").addEventListener("click", function () {
+    var title = taskTitle.value.trim();
+    if (!title) { taskTitle.focus(); return; }
+    if (editingTaskId) {
+      var t = tasks.find(function (x) { return x.id === editingTaskId; });
+      t.title = title; t.start = taskStart.value; t.end = taskEnd.value; t.cat = taskCat.value; t.day = taskDay;
+    } else {
+      tasks.push({ id: uid(), day: taskDay, title: title, start: taskStart.value, end: taskEnd.value, cat: taskCat.value });
+    }
+    saveTasks();
+    closeTaskSheet();
+    renderSchedule(); renderDueToday();
+  });
+  taskDelete.addEventListener("click", function () {
+    tasks = tasks.filter(function (x) { return x.id !== editingTaskId; });
+    saveTasks();
+    closeTaskSheet();
+    renderSchedule(); renderDueToday();
+  });
+
+  /* ================= reminders tab ================= */
+  function toggleReminderComplete(id) {
+    var r = reminders.find(function (x) { return x.id === id; });
+    if (!r) return;
+    r.completed = !r.completed;
+    saveReminders();
+    renderReminders(); renderDueToday(); renderBadge();
+  }
+
+  function renderReminders() {
+    var tk = todayKey();
+    var overdue = [], todayL = [], upcoming = [], completed = [];
+    reminders.forEach(function (r) {
+      if (r.completed) { completed.push(r); return; }
+      if (r.date < tk) overdue.push(r);
+      else if (r.date === tk) todayL.push(r);
+      else upcoming.push(r);
+    });
+    function sortFn(a, b) { if (a.date !== b.date) return a.date < b.date ? -1 : 1; return (a.time ? minsOf(a.time) : -1) - (b.time ? minsOf(b.time) : -1); }
+    overdue.sort(sortFn); todayL.sort(sortFn); upcoming.sort(sortFn);
+    completed.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+
+    function row(r) {
+      var meta = relDateLabel(r.date) + (r.time ? " · " + to12(r.time) : "");
+      var overdueCls = (!r.completed && r.date < tk) ? " overdue" : "";
+      return "<div class='rem-row' data-id='" + r.id + "'>" +
+        "<button class='rem-check" + (r.completed ? " on" : "") + "' data-id='" + r.id + "'><svg class='icon sm'><use href='#icon-check'></use></svg></button>" +
+        "<div class='rem-body'><div class='rem-title" + (r.completed ? " done" : "") + "'>" + escapeHtml(r.title) + "</div>" +
+        "<div class='rem-meta" + overdueCls + "'>" + meta + "</div></div>" +
+        "<button class='rem-del' data-id='" + r.id + "' aria-label='Delete'>&times;</button></div>";
+    }
+
+    var html = "";
+    if (!reminders.length) {
+      html = "<section class='card'><div class='empty-note' style='padding:16px;'>No reminders yet. Tap + to add one — pick a date and it'll remind you that day.</div></section>";
+    } else {
+      if (overdue.length) html += "<div><div class='rem-section-title'>Overdue</div><section class='card'>" + overdue.map(row).join("") + "</section></div>";
+      if (todayL.length) html += "<div><div class='rem-section-title'>Today</div><section class='card'>" + todayL.map(row).join("") + "</section></div>";
+      if (upcoming.length) html += "<div><div class='rem-section-title'>Upcoming</div><section class='card'>" + upcoming.map(row).join("") + "</section></div>";
+      if (!overdue.length && !todayL.length && !upcoming.length && completed.length) html += "<div class='empty-note' style='padding:8px 4px;'>All done for now.</div>";
+      if (completed.length) {
+        html += "<section class='card'><div class='completed-toggle' id='completedToggle'><span class='lbl'>Completed (" + completed.length + ")</span>" +
+          "<svg class='icon sm'><use href='#icon-check' style='opacity:0'></use><polyline points='9,6 15,12 9,18' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg></div>" +
+          "<div class='completed-body' id='completedBody'>" + completed.map(row).join("") + "</div></section>";
+      }
+    }
+    document.getElementById("remindersList").innerHTML = html;
+  }
+
+  document.getElementById("remindersList").addEventListener("click", function (ev) {
+    var toggle = ev.target.closest("#completedToggle");
+    if (toggle) {
+      toggle.classList.toggle("open");
+      document.getElementById("completedBody").classList.toggle("open");
+      return;
+    }
+    var check = ev.target.closest(".rem-check");
+    if (check) { toggleReminderComplete(check.dataset.id); return; }
+    var del = ev.target.closest(".rem-del");
+    if (del) { reminders = reminders.filter(function (x) { return x.id !== del.dataset.id; }); saveReminders(); renderReminders(); renderDueToday(); renderBadge(); return; }
+    var row = ev.target.closest(".rem-row");
+    if (row) { var r = reminders.find(function (x) { return x.id === row.dataset.id; }); if (r) openRemSheet(r); }
+  });
+
+  function renderBadge() {
+    var tk = todayKey();
+    var n = reminders.filter(function (r) { return !r.completed && r.date <= tk; }).length;
+    var badge = document.getElementById("remBadge");
+    if (n > 0) { badge.style.display = "flex"; badge.textContent = n > 9 ? "9+" : n; }
+    else { badge.style.display = "none"; }
+  }
+
+  /* ================= reminder sheet ================= */
+  var remSheetBackdrop = document.getElementById("remSheetBackdrop");
+  var remTitle = document.getElementById("remTitle");
+  var remDate = document.getElementById("remDate");
+  var remTimeToggle = document.getElementById("remTimeToggle");
+  var remTimeWrap = document.getElementById("remTimeWrap");
+  var remTime = document.getElementById("remTime");
+  var remDelete = document.getElementById("remDelete");
+  var editingRemId = null;
+
+  remTimeToggle.addEventListener("change", function () { remTimeWrap.style.display = remTimeToggle.checked ? "" : "none"; });
+
+  function openRemSheet(existing) {
+    if (existing) {
+      editingRemId = existing.id;
+      document.getElementById("remSheetTitle").textContent = "Edit reminder";
+      remTitle.value = existing.title;
+      remDate.value = existing.date;
+      remTimeToggle.checked = !!existing.time;
+      remTime.value = existing.time || "09:00";
+      remTimeWrap.style.display = existing.time ? "" : "none";
+      remDelete.style.display = "";
+    } else {
+      editingRemId = null;
+      document.getElementById("remSheetTitle").textContent = "New reminder";
+      remTitle.value = "";
+      remDate.value = todayKey();
+      remTimeToggle.checked = false;
+      remTime.value = "09:00";
+      remTimeWrap.style.display = "none";
+      remDelete.style.display = "none";
+    }
+    remSheetBackdrop.classList.add("show");
+    setTimeout(function () { remTitle.focus(); }, 30);
+  }
+  function closeRemSheet() { remSheetBackdrop.classList.remove("show"); }
+  document.getElementById("remCancel").addEventListener("click", closeRemSheet);
+  remSheetBackdrop.addEventListener("click", function (ev) { if (ev.target === remSheetBackdrop) closeRemSheet(); });
+
+  document.getElementById("remSave").addEventListener("click", function () {
+    var title = remTitle.value.trim();
+    if (!title || !remDate.value) { remTitle.focus(); return; }
+    var time = remTimeToggle.checked ? remTime.value : null;
+    if (editingRemId) {
+      var r = reminders.find(function (x) { return x.id === editingRemId; });
+      r.title = title; r.date = remDate.value; r.time = time; r._firedMinute = null;
+    } else {
+      reminders.push({ id: uid(), title: title, date: remDate.value, time: time, completed: false, snoozeUntil: null, _firedMinute: null });
+      if (window.Notification && Notification.permission === "default") { try { Notification.requestPermission(); } catch (e) {} }
+    }
+    saveReminders();
+    closeRemSheet();
+    renderReminders(); renderDueToday(); renderBadge();
+  });
+  remDelete.addEventListener("click", function () {
+    reminders = reminders.filter(function (x) { return x.id !== editingRemId; });
+    saveReminders();
+    closeRemSheet();
+    renderReminders(); renderDueToday(); renderBadge();
+  });
+
+  /* ================= alarms tab ================= */
+  var alarmSheetBackdrop = document.getElementById("alarmSheetBackdrop");
+  var alarmDaysEl = document.getElementById("alarmDays");
+  var selAlarmDays = [];
+
+  function openAlarmSheet() {
+    document.getElementById("alarmLabel").value = "";
+    document.getElementById("alarmTime").value = "07:00";
+    selAlarmDays = [];
+    alarmDaysEl.querySelectorAll(".daychip").forEach(function (c) { c.classList.remove("on"); });
+    alarmSheetBackdrop.classList.add("show");
+  }
+  function closeAlarmSheet() { alarmSheetBackdrop.classList.remove("show"); }
+  document.getElementById("alarmCancel").addEventListener("click", closeAlarmSheet);
+  alarmSheetBackdrop.addEventListener("click", function (ev) { if (ev.target === alarmSheetBackdrop) closeAlarmSheet(); });
+
+  alarmDaysEl.addEventListener("click", function (ev) {
+    var chip = ev.target.closest(".daychip");
+    if (!chip) return;
+    var d = +chip.dataset.d;
+    var i = selAlarmDays.indexOf(d);
+    if (i >= 0) { selAlarmDays.splice(i, 1); chip.classList.remove("on"); }
+    else { selAlarmDays.push(d); chip.classList.add("on"); }
+  });
+
+  document.getElementById("addAlarmBtn").addEventListener("click", function () {
+    var time = document.getElementById("alarmTime").value;
+    if (!time) return;
+    var label = document.getElementById("alarmLabel").value.trim() || "Alarm";
+    alarms.push({ id: uid(), time: time, label: label, days: selAlarmDays.slice(), enabled: true, snoozeUntil: null, _firedMinute: null });
+    saveAlarms();
+    if (window.Notification && Notification.permission === "default") { try { Notification.requestPermission(); } catch (e) {} }
+    closeAlarmSheet();
+    renderAlarms(); renderHeroNext();
+  });
+
+  function renderAlarms() {
+    var el = document.getElementById("alarmList");
+    if (!alarms.length) { el.innerHTML = "<div class='empty-note'>No alarms yet. Tap + to add one.</div>"; return; }
+    var sorted = alarms.slice().sort(function (a, b) { return minsOf(a.time) - minsOf(b.time); });
+    el.innerHTML = sorted.map(function (a) {
+      var daysStr = a.days.length ? a.days.map(function (d) { return DAY_NAMES[d]; }).join(" ") : "Once";
+      return "<div class='alarm-item" + (a.enabled ? "" : " disabled") + "'>" +
+        "<div class='time mono'>" + a.time + "</div>" +
+        "<div class='meta'><div class='label'>" + escapeHtml(a.label) + "</div><div class='days'>" + daysStr + "</div></div>" +
+        "<label class='switch'><input type='checkbox' data-id='" + a.id + "' class='alarm-toggle' " + (a.enabled ? "checked" : "") + "><span class='track'></span></label>" +
+        "<button class='icon-btn alarm-del' data-id='" + a.id + "' aria-label='Delete'>&times;</button></div>";
+    }).join("");
+  }
+  document.getElementById("alarmList").addEventListener("change", function (ev) {
+    if (!ev.target.classList.contains("alarm-toggle")) return;
+    var a = alarms.find(function (x) { return x.id === ev.target.dataset.id; });
+    if (a) { a.enabled = ev.target.checked; saveAlarms(); renderAlarms(); renderHeroNext(); }
+  });
+  document.getElementById("alarmList").addEventListener("click", function (ev) {
+    var btn = ev.target.closest(".alarm-del");
+    if (!btn) return;
+    alarms = alarms.filter(function (x) { return x.id !== btn.dataset.id; });
+    saveAlarms();
+    renderAlarms(); renderHeroNext();
+  });
+
+  /* ================= hero next-alarm ================= */
+  function renderHeroNext() {
+    var now = new Date();
+    var ti = todayIdx();
+    var nowMin = now.getHours() * 60 + now.getMinutes();
+    var best = null, bestDelta = Infinity;
+    alarms.filter(function (a) { return a.enabled; }).forEach(function (a) {
+      var target = minsOf(a.time);
+      var days = a.days.length ? a.days : [0, 1, 2, 3, 4, 5, 6];
+      days.forEach(function (d) {
+        var delta = (d - ti) * 1440 + (target - nowMin);
+        while (delta < 0) delta += 7 * 1440;
+        if (delta < bestDelta) { bestDelta = delta; best = a; }
+      });
+    });
+    var el = document.getElementById("heroNext");
+    el.innerHTML = best ? "Next alarm <b>" + best.time + " &middot; " + escapeHtml(best.label) + "</b>" : "No alarms set";
+  }
+
+  /* ================= ring engine (shared: alarms + reminders) ================= */
+  var ringBanner = document.getElementById("ringBanner");
+  var ringTime = document.getElementById("ringTime");
+  var ringLabel = document.getElementById("ringLabel");
+  var doneBtn = document.getElementById("doneBtn");
+  var audioCtx = null;
+  var beepTimer = null;
+  var ringing = null; // { type: 'alarm'|'reminder', item }
+
+  function playBeep() {
+    try {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      var t0 = audioCtx.currentTime;
+      [0, 0.28].forEach(function (offset) {
+        var osc = audioCtx.createOscillator();
+        var gain = audioCtx.createGain();
+        osc.type = "square";
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, t0 + offset);
+        gain.gain.exponentialRampToValueAtTime(0.18, t0 + offset + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, t0 + offset + 0.22);
+        osc.connect(gain).connect(audioCtx.destination);
+        osc.start(t0 + offset);
+        osc.stop(t0 + offset + 0.24);
+      });
+    } catch (e) {}
+  }
+
+  function startRinging(type, item) {
+    ringing = { type: type, item: item };
+    ringTime.textContent = type === "alarm" ? item.time : (item.time || "All day");
+    ringLabel.textContent = type === "alarm" ? item.label : item.title;
+    doneBtn.style.display = type === "reminder" ? "" : "none";
+    ringBanner.classList.add("show");
+    playBeep();
+    beepTimer = setInterval(playBeep, 1200);
+    try {
+      if (window.Notification && Notification.permission === "granted") {
+        new Notification((type === "alarm" ? "Alarm: " : "Reminder: ") + (type === "alarm" ? item.label : item.title), { tag: item.id });
+      }
+    } catch (e) {}
+  }
+  function stopRinging() {
+    ringBanner.classList.remove("show");
+    if (beepTimer) { clearInterval(beepTimer); beepTimer = null; }
+    ringing = null;
+  }
+
+  document.getElementById("dismissBtn").addEventListener("click", function () {
+    if (ringing) {
+      if (ringing.type === "alarm" && !ringing.item.days.length) { ringing.item.enabled = false; saveAlarms(); renderAlarms(); renderHeroNext(); }
+    }
+    stopRinging();
+  });
+  document.getElementById("snoozeBtn").addEventListener("click", function () {
+    if (ringing) {
+      ringing.item.snoozeUntil = Date.now() + 5 * 60 * 1000;
+      if (ringing.type === "alarm") saveAlarms(); else saveReminders();
+    }
+    stopRinging();
+  });
+  doneBtn.addEventListener("click", function () {
+    if (ringing && ringing.type === "reminder") {
+      ringing.item.completed = true;
+      saveReminders();
+      renderReminders(); renderDueToday(); renderBadge();
+    }
+    stopRinging();
+  });
+
+  function checkAlarms() {
+    if (ringing) return;
+    var now = new Date();
+    var ti = todayIdx();
+    var tk = todayKey();
+    var hhmm = pad2(now.getHours()) + ":" + pad2(now.getMinutes());
+    var minuteKey = tk + "-" + now.getHours() + "-" + now.getMinutes();
+
+    for (var i = 0; i < alarms.length; i++) {
+      var a = alarms[i];
+      if (!a.enabled) continue;
+      if (a.snoozeUntil) { if (Date.now() >= a.snoozeUntil) { a.snoozeUntil = null; startRinging("alarm", a); return; } continue; }
+      if (a._firedMinute === minuteKey) continue;
+      var days = a.days.length ? a.days : null;
+      var dueToday = days ? days.indexOf(ti) !== -1 : true;
+      if (dueToday && a.time === hhmm) { a._firedMinute = minuteKey; startRinging("alarm", a); return; }
+    }
+
+    for (var j = 0; j < reminders.length; j++) {
+      var r = reminders[j];
+      if (r.completed || !r.time) continue;
+      if (r.snoozeUntil) { if (Date.now() >= r.snoozeUntil) { r.snoozeUntil = null; startRinging("reminder", r); return; } continue; }
+      if (r._firedMinute === minuteKey) continue;
+      if (r.date === tk && r.time === hhmm) { r._firedMinute = minuteKey; startRinging("reminder", r); return; }
+    }
+  }
+
+  /* ================= init ================= */
+  renderDaypills();
+  renderSchedule();
+  renderDueToday();
+  renderWorklog();
+  renderReminders();
+  renderAlarms();
+  renderHeroNext();
+  renderBadge();
+  tickClock();
+  showTab("today");
+
+  setInterval(function () {
+    tickClock();
+    checkAlarms();
+  }, 1000);
+})();
+</script>
