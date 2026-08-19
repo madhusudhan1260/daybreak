@@ -1,8 +1,13 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="theme-color" content="#eef0f2">
+<link rel="manifest" href="/manifest.json">
+<link rel="apple-touch-icon" href="/icon-192.png">
 <title>Daybreak</title>
 <style>
   :root {
@@ -406,7 +411,23 @@
   .dist-track { flex: 1; height: 8px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
   .dist-fill { height: 100%; border-radius: 999px; }
   .dist-pct { font-size: 11.5px; color: var(--muted); width: 34px; text-align: right; flex: none; }
+
+  /* ---- account / cloud sync ---- */
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .topbar-titlewrap { min-width: 0; }
+  .account-btn { width: 34px; height: 34px; border-radius: 50%; background: var(--paper); border: 1px solid var(--line); color: var(--muted); display: flex; align-items: center; justify-content: center; flex: none; font-size: 13px; font-weight: 800; padding: 0; }
+  .account-btn.signed-in { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .sync-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted); display: inline-block; margin-right: 5px; vertical-align: middle; }
+  .sync-dot.ok { background: var(--good); }
+  .sync-dot.busy { background: var(--accent); }
+  .sync-line { font-size: 11.5px; color: var(--muted); }
+  .auth-divider { display: flex; align-items: center; gap: 10px; color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; margin: 2px 0; }
+  .auth-divider::before, .auth-divider::after { content: ""; flex: 1; height: 1px; background: var(--line-soft); }
+  .auth-error { font-size: 12.5px; color: var(--danger); min-height: 16px; }
+  .btn-google { background: #fff; color: #1f1f1f; border: 1px solid var(--line); display: flex; align-items: center; justify-content: center; gap: 10px; }
 </style>
+</head>
+<body>
 
 <svg style="display:none" aria-hidden="true">
   <symbol id="icon-today" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="3"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="8" y1="3" x2="8" y2="7"/><line x1="16" y1="3" x2="16" y2="7"/></symbol>
@@ -423,7 +444,13 @@
 
 <div class="app tab-today" id="appRoot">
 
-  <header class="topbar"><h1 id="topbarTitle">Today</h1></header>
+  <header class="topbar">
+    <div class="topbar-titlewrap"><h1 id="topbarTitle">Today</h1></div>
+    <button class="account-btn" id="accountBtn" aria-label="Account">
+      <svg class="icon sm" id="accountBtnIcon"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+      <span id="accountBtnInitial" style="display:none;"></span>
+    </button>
+  </header>
 
   <main class="content">
 
@@ -755,6 +782,48 @@
     </div>
   </div>
 
+  <!-- account sheet -->
+  <div class="sheet-backdrop" id="accountSheetBackdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+
+      <div id="signedOutView">
+        <h2 class="sheet-title">Sign in to sync</h2>
+        <div class="hint" style="margin-top:-6px;">Your data stays on this device either way. Sign in to back it up and use it across your devices.</div>
+        <button class="btn-google" id="googleSignInBtn">
+          <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 01-1.8 2.72v2.26h2.9c1.7-1.57 2.7-3.87 2.7-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.9-2.26c-.8.54-1.84.86-3.06.86-2.35 0-4.34-1.59-5.05-3.72H.9v2.33A9 9 0 009 18z"/><path fill="#FBBC05" d="M3.95 10.7A5.4 5.4 0 013.68 9c0-.59.1-1.17.27-1.7V4.97H.9A9 9 0 000 9c0 1.45.35 2.83.9 4.03l3.05-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 00.9 4.97L3.95 7.3C4.66 5.17 6.65 3.58 9 3.58z"/></svg>
+          Continue with Google
+        </button>
+        <div class="auth-divider">or</div>
+        <input type="email" id="authEmail" placeholder="Email" autocomplete="email" />
+        <input type="password" id="authPassword" placeholder="Password" autocomplete="current-password" />
+        <div class="auth-error" id="authError"></div>
+        <div class="row actions">
+          <button class="btn-ghost" id="authSignUpBtn">Create account</button>
+          <button class="btn-primary" id="authSignInBtn">Sign in</button>
+        </div>
+      </div>
+
+      <div id="signedInView" style="display:none;">
+        <h2 class="sheet-title">Account</h2>
+        <div class="hint" id="accountEmailLine" style="margin-top:-6px;"></div>
+        <div class="sync-line" id="syncStatusLine"><span class="sync-dot" id="syncDot"></span>Not synced yet</div>
+        <div class="toggle-row">
+          <span class="lbl">Notifications</span>
+          <button class="btn-ghost" id="notifBtn" style="flex:none;">Enable</button>
+        </div>
+        <div class="hint" id="notifStatusLine" style="margin-top:-6px;"></div>
+        <div class="row actions">
+          <button class="btn-danger" id="signOutBtn" style="width:100%;">Sign out</button>
+        </div>
+      </div>
+
+      <div class="row actions">
+        <button class="btn-ghost" id="accountSheetClose" style="width:100%;">Close</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ringing overlay -->
   <div class="ring-banner" id="ringBanner">
     <div class="ring-card">
@@ -814,6 +883,249 @@
 
 </div>
 
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-messaging-compat.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  var firebaseConfig = {
+    apiKey: "AIzaSyA8Yl0V1SZFD-Hcb9UPAnkpqCm2bsuqLH8",
+    authDomain: "daybreak-36be5.firebaseapp.com",
+    projectId: "daybreak-36be5",
+    storageBucket: "daybreak-36be5.firebasestorage.app",
+    messagingSenderId: "77834726790",
+    appId: "1:77834726790:web:2ee892f83a87a458651007"
+  };
+
+  var fbApp = null, auth = null, db = null;
+  try {
+    fbApp = firebase.initializeApp(firebaseConfig);
+    auth = firebase.auth();
+    db = firebase.firestore();
+  } catch (e) {
+    console.error("Firebase init failed — running local-only.", e);
+  }
+
+  var currentUser = null;
+  var syncEnabled = false;
+  var pendingWrites = {};
+  var writeTimers = {};
+
+  function allDaybreakKeys() {
+    var keys = [];
+    for (var i = 0; i < localStorage.length; i++) {
+      var k = localStorage.key(i);
+      if (k && k.indexOf("daybreak.") === 0) keys.push(k);
+    }
+    return keys;
+  }
+
+  function setSyncStatus(state) {
+    var dot = document.getElementById("syncDot");
+    var line = document.getElementById("syncStatusLine");
+    if (!dot || !line) return;
+    dot.className = "sync-dot" + (state === "ok" ? " ok" : state === "busy" ? " busy" : "");
+    var label = state === "ok" ? "Synced" : state === "busy" ? "Syncing…" : state === "error" ? "Sync error — will retry" : "Not synced yet";
+    line.innerHTML = "";
+    line.appendChild(dot);
+    line.appendChild(document.createTextNode(label));
+  }
+
+  function updateAccountButtonUI(user) {
+    var btn = document.getElementById("accountBtn");
+    var icon = document.getElementById("accountBtnIcon");
+    var initial = document.getElementById("accountBtnInitial");
+    if (user) {
+      btn.classList.add("signed-in");
+      icon.style.display = "none";
+      initial.style.display = "";
+      initial.textContent = (user.email || "?").charAt(0).toUpperCase();
+    } else {
+      btn.classList.remove("signed-in");
+      icon.style.display = "";
+      initial.style.display = "none";
+    }
+  }
+
+  function pushKeyToCloud(key, value) {
+    if (!currentUser || !syncEnabled || !db) return;
+    pendingWrites[key] = value;
+    if (writeTimers[key]) clearTimeout(writeTimers[key]);
+    setSyncStatus("busy");
+    writeTimers[key] = setTimeout(function () { flushKey(key); }, 800);
+  }
+  function flushKey(key) {
+    if (!currentUser) return;
+    var value = pendingWrites[key];
+    delete pendingWrites[key];
+    db.collection("users").doc(currentUser.uid).collection("appState").doc(key)
+      .set({ value: value, updatedAt: firebase.firestore.FieldValue.serverTimestamp() })
+      .then(function () { setSyncStatus("ok"); })
+      .catch(function (err) { console.error("cloud sync failed for", key, err); setSyncStatus("error"); });
+  }
+  window.__daybreakSaveHook = function (key, value) { pushKeyToCloud(key, value); };
+
+  function handleAuthedUser(user) {
+    currentUser = user;
+    updateAccountButtonUI(user);
+    document.getElementById("signedOutView").style.display = "none";
+    document.getElementById("signedInView").style.display = "";
+    document.getElementById("accountEmailLine").textContent = "Signed in as " + (user.email || user.uid);
+
+    if (!db) return;
+    if (sessionStorage.getItem("daybreak.cloudSynced") === "1") {
+      syncEnabled = true;
+      setSyncStatus("ok");
+      return;
+    }
+    setSyncStatus("busy");
+    var col = db.collection("users").doc(user.uid).collection("appState");
+    col.limit(1).get().then(function (snap) {
+      if (snap.empty) {
+        var keys = allDaybreakKeys();
+        var batch = db.batch();
+        keys.forEach(function (k) {
+          var raw = localStorage.getItem(k);
+          var val; try { val = JSON.parse(raw); } catch (e) { val = raw; }
+          batch.set(col.doc(k), { value: val, updatedAt: firebase.firestore.FieldValue.serverTimestamp() });
+        });
+        return batch.commit().then(function () {
+          sessionStorage.setItem("daybreak.cloudSynced", "1");
+          syncEnabled = true;
+          setSyncStatus("ok");
+        });
+      }
+      return col.get().then(function (fullSnap) {
+        fullSnap.forEach(function (doc) {
+          var data = doc.data();
+          localStorage.setItem(doc.id, JSON.stringify(data.value));
+        });
+        sessionStorage.setItem("daybreak.cloudSynced", "1");
+        location.reload();
+      });
+    }).catch(function (err) {
+      console.error("initial cloud sync failed", err);
+      setSyncStatus("error");
+    });
+  }
+
+  function handleSignedOut() {
+    currentUser = null;
+    syncEnabled = false;
+    updateAccountButtonUI(null);
+    document.getElementById("signedOutView").style.display = "";
+    document.getElementById("signedInView").style.display = "none";
+  }
+
+  if (auth) {
+    auth.onAuthStateChanged(function (user) {
+      if (user) handleAuthedUser(user); else handleSignedOut();
+    });
+  }
+
+  /* ---- account sheet UI ---- */
+  var accountSheetBackdrop = document.getElementById("accountSheetBackdrop");
+  document.getElementById("accountBtn").addEventListener("click", function () {
+    document.getElementById("authError").textContent = "";
+    accountSheetBackdrop.classList.add("show");
+  });
+  document.getElementById("accountSheetClose").addEventListener("click", function () { accountSheetBackdrop.classList.remove("show"); });
+  accountSheetBackdrop.addEventListener("click", function (ev) { if (ev.target === accountSheetBackdrop) accountSheetBackdrop.classList.remove("show"); });
+
+  function showAuthError(err) {
+    var msg = (err && err.message) ? err.message.replace(/^Firebase:\s*/, "") : "Something went wrong.";
+    document.getElementById("authError").textContent = msg;
+  }
+
+  document.getElementById("googleSignInBtn").addEventListener("click", function () {
+    if (!auth) return;
+    var provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(function (err) {
+      if (err && (err.code === "auth/popup-blocked" || err.code === "auth/operation-not-supported-in-this-environment" || err.code === "auth/cancelled-popup-request")) {
+        auth.signInWithRedirect(provider).catch(showAuthError);
+      } else {
+        showAuthError(err);
+      }
+    });
+  });
+  document.getElementById("authSignInBtn").addEventListener("click", function () {
+    if (!auth) return;
+    var email = document.getElementById("authEmail").value.trim();
+    var pw = document.getElementById("authPassword").value;
+    if (!email || !pw) { showAuthError({ message: "Enter an email and password." }); return; }
+    auth.signInWithEmailAndPassword(email, pw).catch(showAuthError);
+  });
+  document.getElementById("authSignUpBtn").addEventListener("click", function () {
+    if (!auth) return;
+    var email = document.getElementById("authEmail").value.trim();
+    var pw = document.getElementById("authPassword").value;
+    if (!email || !pw) { showAuthError({ message: "Enter an email and password." }); return; }
+    if (pw.length < 6) { showAuthError({ message: "Password must be at least 6 characters." }); return; }
+    auth.createUserWithEmailAndPassword(email, pw).catch(showAuthError);
+  });
+  document.getElementById("signOutBtn").addEventListener("click", function () {
+    if (!auth) return;
+    sessionStorage.removeItem("daybreak.cloudSynced");
+    auth.signOut();
+    accountSheetBackdrop.classList.remove("show");
+  });
+
+  /* ---- push notifications ---- */
+  var VAPID_KEY = "BHckh86QuzMBPxeXm-BX33fk8HS4ej2YR9M8uixrH6iykluxCfrTTOoLv3N3EnTMc1NKAEAcCFU6AkqzwuDxohw";
+  var messaging = null;
+  try { if (firebase.messaging.isSupported && firebase.messaging.isSupported()) messaging = firebase.messaging(); } catch (e) {}
+
+  function refreshNotifBtnUI() {
+    var btn = document.getElementById("notifBtn");
+    var status = document.getElementById("notifStatusLine");
+    if (!messaging) {
+      btn.style.display = "none";
+      status.textContent = "Push notifications aren't supported in this browser.";
+      return;
+    }
+    if (Notification.permission === "granted") {
+      btn.textContent = "Enabled";
+      btn.disabled = true;
+      status.textContent = "You'll get a notification for alarms and reminders, even with this tab closed.";
+    } else if (Notification.permission === "denied") {
+      btn.textContent = "Blocked";
+      btn.disabled = true;
+      status.textContent = "Notifications are blocked for this site in your browser settings.";
+    } else {
+      btn.textContent = "Enable";
+      btn.disabled = false;
+      status.textContent = "Turn this on to get notified even when the tab is closed.";
+    }
+  }
+
+  function registerPushToken() {
+    if (!messaging || !currentUser || !("serviceWorker" in navigator)) return;
+    navigator.serviceWorker.ready.then(function (registration) {
+      return messaging.getToken({ vapidKey: VAPID_KEY, serviceWorkerRegistration: registration });
+    }).then(function (token) {
+      if (!token || !db || !currentUser) return;
+      db.collection("users").doc(currentUser.uid).collection("fcmTokens").doc(token).set({
+        token: token,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        userAgent: navigator.userAgent
+      });
+    }).catch(function (err) { console.error("push token registration failed", err); });
+  }
+
+  document.getElementById("notifBtn").addEventListener("click", function () {
+    if (!messaging) return;
+    Notification.requestPermission().then(function (perm) {
+      refreshNotifBtnUI();
+      if (perm === "granted") registerPushToken();
+    });
+  });
+  document.getElementById("accountBtn").addEventListener("click", refreshNotifBtnUI);
+})();
+</script>
+
 <script>
 (function () {
   "use strict";
@@ -856,7 +1168,10 @@
 
   var store = {
     load: function (k, fallback) { try { var v = JSON.parse(localStorage.getItem(k)); return v || fallback; } catch (e) { return fallback; } },
-    save: function (k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+    save: function (k, v) {
+      try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {}
+      if (window.__daybreakSaveHook) window.__daybreakSaveHook(k, v);
+    }
   };
 
   var tasks = store.load("daybreak.tasks", []);
@@ -2180,3 +2495,12 @@
   }, 1000);
 })();
 </script>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("/sw.js").catch(function (err) { console.error("SW registration failed", err); });
+  });
+}
+</script>
+</body>
+</html>
