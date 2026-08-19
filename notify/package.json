@@ -1,0 +1,10 @@
+{
+  "name": "daybreak-notify",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Scheduled job that checks Firestore for due alarms/reminders/tasks and sends push notifications.",
+  "main": "check-and-notify.js",
+  "dependencies": {
+    "firebase-admin": "^12.6.0"
+  }
+}
