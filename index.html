@@ -367,6 +367,45 @@
   .status-btns button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
   .status-btns button.active[data-t="spent"] { background: var(--danger); border-color: var(--danger); color: #fff; }
   .status-btns button.active[data-t="saved"] { background: var(--good); border-color: var(--good); color: #fff; }
+  .status-btns button.active[data-p="high"] { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .status-btns button.active[data-p="medium"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .status-btns button.active[data-p="low"] { background: var(--good); border-color: var(--good); color: #fff; }
+
+  /* ---- priority badge ---- */
+  .pri-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .pri-dot.high { background: var(--danger); }
+  .pri-dot.medium { background: var(--accent); }
+  .pri-dot.low { background: var(--good); }
+
+  /* ---- top priorities card ---- */
+  .top-pri-row { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-top: 1px solid var(--line-soft); }
+  .top-pri-row:first-child { border-top: none; }
+  .top-pri-rank { width: 20px; height: 20px; border-radius: 50%; background: var(--paper); color: var(--muted); font-size: 11px; font-weight: 800; display: flex; align-items: center; justify-content: center; flex: none; }
+
+  /* ---- missed reminder overlay ---- */
+  .missed-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .missed-actions button { padding: 12px 6px; font-size: 12.5px; }
+
+  /* ---- focus mode ---- */
+  .focus-card { background: var(--paper-raised); border-radius: 20px; padding: 40px 30px; text-align: center; max-width: 320px; width: 100%; box-shadow: 0 20px 60px -10px rgba(0,0,0,0.5); }
+  .focus-subject { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 800; color: var(--muted); }
+  .focus-timer { font-size: 44px; font-weight: 800; font-variant-numeric: tabular-nums; margin: 14px 0 22px; }
+  .focus-pulse { width: 10px; height: 10px; border-radius: 50%; background: var(--accent); margin: 0 auto 22px; animation: focusPulse 1.6s ease-in-out infinite; }
+  @keyframes focusPulse { 0%, 100% { opacity: 0.3; transform: scale(0.85); } 50% { opacity: 1; transform: scale(1.15); } }
+  .focus-actions { display: flex; gap: 10px; }
+  .focus-actions button { flex: 1; }
+  .focus-actions.paused .focus-pulse { animation: none; opacity: 0.25; }
+
+  /* ---- weekly report ---- */
+  .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--line-soft); }
+  .report-tile { background: var(--paper-raised); padding: 12px 14px; }
+  .report-tile .rt-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); font-weight: 700; }
+  .report-tile .rt-value { font-size: 18px; font-weight: 800; margin-top: 2px; }
+  .dist-row { display: flex; align-items: center; gap: 8px; padding: 6px 16px; }
+  .dist-label { font-size: 12px; font-weight: 600; width: 76px; flex: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .dist-track { flex: 1; height: 8px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
+  .dist-fill { height: 100%; border-radius: 999px; }
+  .dist-pct { font-size: 11.5px; color: var(--muted); width: 34px; text-align: right; flex: none; }
 </style>
 
 <svg style="display:none" aria-hidden="true">
@@ -396,6 +435,11 @@
       </div>
 
       <div class="streaks-row" id="streaksRow"></div>
+
+      <section class="card" id="topPriorityCard" style="display:none;">
+        <div class="card-head"><h2>Top priorities</h2></div>
+        <div id="topPriorityList"></div>
+      </section>
 
       <section class="card">
         <div class="card-head"><h2>Today's score</h2></div>
@@ -465,6 +509,11 @@
         <div class="card-head"><h2>Subjects</h2></div>
         <div id="subjectsList"></div>
       </section>
+      <section class="card" id="weeklyReportCard" style="display:none;">
+        <div class="card-head"><h2>Weekly report</h2></div>
+        <div class="report-grid" id="reportGrid"></div>
+        <div id="reportDistribution" style="padding:10px 0 14px;"></div>
+      </section>
       <section class="card">
         <div class="card-head">
           <h2>Productivity history</h2>
@@ -529,6 +578,31 @@
           <option value="work">Work</option><option value="study">Study</option><option value="personal">Personal</option>
           <option value="break">Break</option><option value="other">Other</option>
         </select>
+      </div>
+      <div>
+        <span class="field-label">Priority</span>
+        <div class="status-btns" id="taskPriorityBtns">
+          <button data-p="">None</button>
+          <button data-p="low">&#128994; Low</button>
+          <button data-p="medium">&#128993; Medium</button>
+          <button data-p="high">&#128308; High</button>
+        </div>
+      </div>
+      <div>
+        <span class="field-label">Notes</span>
+        <input type="text" id="taskNotes" placeholder="Optional details" maxlength="200" />
+      </div>
+      <div class="toggle-row">
+        <span class="lbl">Remind me at start time</span>
+        <label class="switch"><input type="checkbox" id="taskReminderToggle" /><span class="track"></span></label>
+      </div>
+      <div>
+        <span class="field-label">Checklist</span>
+        <div class="row">
+          <input type="text" id="taskItemInput" placeholder="Add an item" maxlength="60" />
+          <button class="btn-primary" id="taskItemAdd" style="flex:none;">Add</button>
+        </div>
+        <div id="taskItemsList"></div>
       </div>
       <div class="row actions">
         <button class="btn-ghost" id="taskCancel">Cancel</button>
@@ -633,6 +707,7 @@
           </div>
         </div>
         <div class="streak-line" id="subjectStreakLine"></div>
+        <button class="btn-primary" id="subjectStartFocus" style="width:100%;">&#9654; Start focus session</button>
 
         <div>
           <span class="field-label">Checklist — what's done, what's left</span>
@@ -694,6 +769,49 @@
     </div>
   </div>
 
+  <!-- missed reminder overlay -->
+  <div class="ring-banner" id="missedBanner">
+    <div class="ring-card">
+      <div class="ring-icon" style="color:var(--danger);">&#9888;&#65039;</div>
+      <div class="ring-label" style="margin-bottom:2px; font-weight:700; color:var(--ink);">You missed this reminder</div>
+      <div class="ring-label" id="missedTitle" style="margin-bottom:18px;">Reminder</div>
+      <div class="missed-actions">
+        <button class="btn-good" id="missedComplete">Complete now</button>
+        <button class="btn-primary" id="missedTomorrow">Move to tomorrow</button>
+        <button class="btn-ghost" id="missedReschedule">Reschedule</button>
+        <button class="btn-danger" id="missedSkip">Skip</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- focus mode overlay -->
+  <div class="ring-banner" id="focusOverlay">
+    <div class="focus-card">
+      <div class="focus-subject" id="focusSubjectName">Subject</div>
+      <div class="focus-timer mono" id="focusTimer">00:00</div>
+      <div class="focus-pulse" id="focusPulse"></div>
+      <div class="focus-actions" id="focusActions">
+        <button class="btn-ghost" id="focusPauseBtn">Pause</button>
+        <button class="btn-primary" id="focusFinishBtn">Finish</button>
+      </div>
+      <button class="icon-btn" id="focusCancelBtn" style="margin-top:14px;">Cancel session</button>
+    </div>
+  </div>
+
+  <!-- focus finish sheet -->
+  <div class="sheet-backdrop" id="focusFinishBackdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">What did you accomplish?</h2>
+      <div class="hint" id="focusFinishSubject" style="margin-top:-6px;"></div>
+      <input type="text" id="focusFinishNote" placeholder="Write what you did..." maxlength="140" />
+      <div class="row actions">
+        <button class="btn-ghost" id="focusFinishDiscard">Discard</button>
+        <button class="btn-primary" id="focusFinishSave">Save</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <script>
@@ -742,6 +860,7 @@
   };
 
   var tasks = store.load("daybreak.tasks", []);
+  var taskItems = store.load("daybreak.taskItems", []);
   var alarms = store.load("daybreak.alarms", []);
   var reminders = store.load("daybreak.reminders", []);
   var worklog = store.load("daybreak.worklog", {});
@@ -757,6 +876,8 @@
   function saveMoney() { store.save("daybreak.money", moneyLog); }
 
   function saveTasks() { store.save("daybreak.tasks", tasks); }
+  function saveTaskItems() { store.save("daybreak.taskItems", taskItems); }
+  function priorityRank(p) { return p === "high" ? 3 : p === "medium" ? 2 : p === "low" ? 1 : 0; }
   function saveAlarms() { store.save("daybreak.alarms", alarms); }
   function saveReminders() { store.save("daybreak.reminders", reminders); }
   function saveWorklog() { store.save("daybreak.worklog", worklog); }
@@ -800,7 +921,8 @@
     ["today", "schedule", "subjects", "reminders", "alarms"].forEach(function (t) {
       document.getElementById("tab-" + t).hidden = t !== name;
     });
-    if (name === "subjects") renderCalendar();
+    if (name === "subjects") { renderCalendar(); renderWeeklyReport(); }
+    if (name === "reminders") checkMissedReminders();
     document.querySelectorAll(".tabbar button").forEach(function (b) {
       b.classList.toggle("active", b.dataset.tab === name);
     });
@@ -835,7 +957,7 @@
     tasks.filter(function (t) { return t.day === ti; }).forEach(function (t) {
       items.push({ kind: "task", sort: minsOf(t.start), ref: t });
     });
-    reminders.filter(function (r) { return r.date === tk && !r.completed; }).forEach(function (r) {
+    reminders.filter(function (r) { return r.date === tk && !r.completed && !r.skipped; }).forEach(function (r) {
       items.push({ kind: "reminder", sort: r.time ? minsOf(r.time) : -1, ref: r });
     });
     items.sort(function (a, b) { return a.sort - b.sort; });
@@ -846,6 +968,7 @@
       if (it.kind === "task") {
         var t = it.ref;
         return "<div class='agenda-row' data-kind='task' data-id='" + t.id + "'>" +
+          (t.priority ? "<span class='pri-dot " + t.priority + "'></span>" : "") +
           "<span class='agenda-dot' style='background:var(--cat-" + t.cat + ")'></span>" +
           "<span class='agenda-title'>" + escapeHtml(t.title) + "</span>" +
           "<span class='agenda-time mono'>" + t.start + "</span></div>";
@@ -906,6 +1029,30 @@
     worklog[tk] = (worklog[tk] || []).filter(function (e) { return e.id !== btn.dataset.id; });
     saveWorklog();
     renderWorklog();
+  });
+
+  /* ================= top priorities ================= */
+  function renderTopPriorities() {
+    var ti = todayIdx();
+    var items = tasks.filter(function (t) { return t.day === ti && t.priority; })
+      .sort(function (a, b) { return priorityRank(b.priority) - priorityRank(a.priority) || minsOf(a.start) - minsOf(b.start); })
+      .slice(0, 3);
+    var card = document.getElementById("topPriorityCard");
+    if (!items.length) { card.style.display = "none"; return; }
+    card.style.display = "";
+    document.getElementById("topPriorityList").innerHTML = items.map(function (t, i) {
+      return "<div class='top-pri-row agenda-row' data-id='" + t.id + "'>" +
+        "<span class='top-pri-rank'>" + (i + 1) + "</span>" +
+        "<span class='pri-dot " + t.priority + "'></span>" +
+        "<span class='agenda-title'>" + escapeHtml(t.title) + "</span>" +
+        "<span class='agenda-time mono'>" + t.start + "</span></div>";
+    }).join("");
+  }
+  document.getElementById("topPriorityList").addEventListener("click", function (ev) {
+    var row = ev.target.closest("[data-id]");
+    if (!row) return;
+    var t = tasks.find(function (x) { return x.id === row.dataset.id; });
+    if (t) openTaskSheet(t, t.day);
   });
 
   /* ================= streaks / score / graph / today's work ================= */
@@ -975,7 +1122,7 @@
     subjectDay[key] = rec;
     saveSubjectDay();
     renderTodaysWork(); renderStreaks(); renderScoreCard(); renderWeeklyGraph();
-    if (activeTab === "subjects") renderCalendar();
+    if (activeTab === "subjects") { renderCalendar(); renderWeeklyReport(); }
   }
 
   document.getElementById("todaysWorkList").addEventListener("click", function (ev) {
@@ -1118,6 +1265,7 @@
     if (!items.length) { el.innerHTML = "<div class='empty-note'>No tasks on " + DAY_FULL[selectedDay] + ". Tap + to add one.</div>"; return; }
     el.innerHTML = items.map(function (t) {
       return "<div class='agenda-row' data-id='" + t.id + "'>" +
+        (t.priority ? "<span class='pri-dot " + t.priority + "'></span>" : "") +
         "<span class='agenda-dot' style='background:var(--cat-" + t.cat + ")'></span>" +
         "<span class='agenda-title'>" + escapeHtml(t.title) + "</span>" +
         "<span class='agenda-time mono'>" + to12(t.start) + "&ndash;" + to12(t.end) + "</span></div>";
@@ -1138,7 +1286,10 @@
   var taskCat = document.getElementById("taskCat");
   var taskDelete = document.getElementById("taskDelete");
   var taskDayChips = document.getElementById("taskDayChips");
-  var editingTaskId = null, taskDay = 0;
+  var taskNotes = document.getElementById("taskNotes");
+  var taskReminderToggle = document.getElementById("taskReminderToggle");
+  var taskPriorityBtns = document.getElementById("taskPriorityBtns");
+  var editingTaskId = null, taskDay = 0, taskPriority = "";
 
   function setTaskDayChip(day) {
     taskDay = day;
@@ -1150,6 +1301,50 @@
     setTaskDayChip(+chip.dataset.d);
   });
 
+  function setTaskPriority(p) {
+    taskPriority = p;
+    taskPriorityBtns.querySelectorAll("button").forEach(function (b) { b.classList.toggle("active", b.dataset.p === p); });
+  }
+  taskPriorityBtns.addEventListener("click", function (ev) {
+    var b = ev.target.closest("button");
+    if (b) setTaskPriority(b.dataset.p);
+  });
+
+  function renderTaskChecklist() {
+    var items = taskItems.filter(function (it) { return it.taskId === editingTaskId; });
+    var remaining = items.filter(function (it) { return !it.done; });
+    var completed = items.filter(function (it) { return it.done; });
+    function row(it) {
+      return "<div class='chk-row'><button class='chk-toggle" + (it.done ? " on" : "") + "' data-id='" + it.id + "'><svg class='icon sm'><use href='#icon-check'></use></svg></button>" +
+        "<span class='chk-text" + (it.done ? " done" : "") + "'>" + escapeHtml(it.text) + "</span>" +
+        "<button class='chk-del' data-id='" + it.id + "'>&times;</button></div>";
+    }
+    document.getElementById("taskItemsList").innerHTML =
+      (remaining.length ? remaining.map(row).join("") : "<div class='empty-note' style='padding:2px;'>Nothing left.</div>") +
+      (completed.length ? completed.map(row).join("") : "");
+  }
+  document.getElementById("taskItemsList").addEventListener("click", function (ev) {
+    var toggle = ev.target.closest(".chk-toggle");
+    if (toggle) {
+      var it = taskItems.find(function (x) { return x.id === toggle.dataset.id; });
+      if (it) { it.done = !it.done; saveTaskItems(); renderTaskChecklist(); }
+      return;
+    }
+    var del = ev.target.closest(".chk-del");
+    if (del) { taskItems = taskItems.filter(function (x) { return x.id !== del.dataset.id; }); saveTaskItems(); renderTaskChecklist(); }
+  });
+  document.getElementById("taskItemAdd").addEventListener("click", addTaskItem);
+  document.getElementById("taskItemInput").addEventListener("keydown", function (ev) { if (ev.key === "Enter") addTaskItem(); });
+  function addTaskItem() {
+    var input = document.getElementById("taskItemInput");
+    var text = input.value.trim();
+    if (!text || !editingTaskId) return;
+    taskItems.push({ id: uid(), taskId: editingTaskId, text: text, done: false });
+    saveTaskItems();
+    input.value = "";
+    renderTaskChecklist();
+  }
+
   function openTaskSheet(existing, day) {
     if (existing) {
       editingTaskId = existing.id;
@@ -1158,44 +1353,61 @@
       taskStart.value = existing.start;
       taskEnd.value = existing.end;
       taskCat.value = existing.cat;
+      taskNotes.value = existing.notes || "";
+      taskReminderToggle.checked = !!existing.reminder;
+      setTaskPriority(existing.priority || "");
       setTaskDayChip(existing.day);
       taskDelete.style.display = "";
+      renderTaskChecklist();
     } else {
-      editingTaskId = null;
+      editingTaskId = uid();
       document.getElementById("taskSheetTitle").textContent = "New task";
       taskTitle.value = "";
       var hour = new Date().getHours();
       taskStart.value = pad2(hour) + ":00";
       taskEnd.value = pad2((hour + 1) % 24) + ":00";
       taskCat.value = "work";
+      taskNotes.value = "";
+      taskReminderToggle.checked = false;
+      setTaskPriority("");
       setTaskDayChip(day != null ? day : selectedDay);
       taskDelete.style.display = "none";
+      renderTaskChecklist();
     }
     taskSheetBackdrop.classList.add("show");
     setTimeout(function () { taskTitle.focus(); }, 30);
   }
-  function closeTaskSheet() { taskSheetBackdrop.classList.remove("show"); }
+  function closeTaskSheet() {
+    if (editingTaskId && !tasks.find(function (x) { return x.id === editingTaskId; })) {
+      var hadOrphans = taskItems.some(function (x) { return x.taskId === editingTaskId; });
+      if (hadOrphans) { taskItems = taskItems.filter(function (x) { return x.taskId !== editingTaskId; }); saveTaskItems(); }
+    }
+    taskSheetBackdrop.classList.remove("show");
+  }
   document.getElementById("taskCancel").addEventListener("click", closeTaskSheet);
   taskSheetBackdrop.addEventListener("click", function (ev) { if (ev.target === taskSheetBackdrop) closeTaskSheet(); });
 
   document.getElementById("taskSave").addEventListener("click", function () {
     var title = taskTitle.value.trim();
     if (!title) { taskTitle.focus(); return; }
-    if (editingTaskId) {
-      var t = tasks.find(function (x) { return x.id === editingTaskId; });
-      t.title = title; t.start = taskStart.value; t.end = taskEnd.value; t.cat = taskCat.value; t.day = taskDay;
+    var existing = tasks.find(function (x) { return x.id === editingTaskId; });
+    if (existing) {
+      existing.title = title; existing.start = taskStart.value; existing.end = taskEnd.value; existing.cat = taskCat.value; existing.day = taskDay;
+      existing.priority = taskPriority; existing.notes = taskNotes.value.trim(); existing.reminder = taskReminderToggle.checked;
     } else {
-      tasks.push({ id: uid(), day: taskDay, title: title, start: taskStart.value, end: taskEnd.value, cat: taskCat.value });
+      tasks.push({ id: editingTaskId, day: taskDay, title: title, start: taskStart.value, end: taskEnd.value, cat: taskCat.value, priority: taskPriority, notes: taskNotes.value.trim(), reminder: taskReminderToggle.checked, snoozeUntil: null, _firedMinute: null });
     }
     saveTasks();
     closeTaskSheet();
-    renderSchedule(); renderDueToday();
+    renderSchedule(); renderDueToday(); renderTopPriorities();
   });
   taskDelete.addEventListener("click", function () {
     tasks = tasks.filter(function (x) { return x.id !== editingTaskId; });
+    taskItems = taskItems.filter(function (x) { return x.taskId !== editingTaskId; });
+    saveTaskItems();
     saveTasks();
     closeTaskSheet();
-    renderSchedule(); renderDueToday();
+    renderSchedule(); renderDueToday(); renderTopPriorities();
   });
 
   /* ================= reminders tab ================= */
@@ -1209,9 +1421,10 @@
 
   function renderReminders() {
     var tk = todayKey();
-    var overdue = [], todayL = [], upcoming = [], completed = [];
+    var overdue = [], todayL = [], upcoming = [], completed = [], skipped = [];
     reminders.forEach(function (r) {
       if (r.completed) { completed.push(r); return; }
+      if (r.skipped) { skipped.push(r); return; }
       if (r.date < tk) overdue.push(r);
       else if (r.date === tk) todayL.push(r);
       else upcoming.push(r);
@@ -1219,10 +1432,11 @@
     function sortFn(a, b) { if (a.date !== b.date) return a.date < b.date ? -1 : 1; return (a.time ? minsOf(a.time) : -1) - (b.time ? minsOf(b.time) : -1); }
     overdue.sort(sortFn); todayL.sort(sortFn); upcoming.sort(sortFn);
     completed.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+    skipped.sort(function (a, b) { return a.date < b.date ? 1 : -1; });
 
     function row(r) {
-      var meta = relDateLabel(r.date) + (r.time ? " · " + to12(r.time) : "");
-      var overdueCls = (!r.completed && r.date < tk) ? " overdue" : "";
+      var meta = relDateLabel(r.date) + (r.time ? " · " + to12(r.time) : "") + (r.skipped ? " · Skipped" : "");
+      var overdueCls = (!r.completed && !r.skipped && r.date < tk) ? " overdue" : "";
       return "<div class='rem-row' data-id='" + r.id + "'>" +
         "<button class='rem-check" + (r.completed ? " on" : "") + "' data-id='" + r.id + "'><svg class='icon sm'><use href='#icon-check'></use></svg></button>" +
         "<div class='rem-body'><div class='rem-title" + (r.completed ? " done" : "") + "'>" + escapeHtml(r.title) + "</div>" +
@@ -1237,11 +1451,16 @@
       if (overdue.length) html += "<div><div class='rem-section-title'>Overdue</div><section class='card'>" + overdue.map(row).join("") + "</section></div>";
       if (todayL.length) html += "<div><div class='rem-section-title'>Today</div><section class='card'>" + todayL.map(row).join("") + "</section></div>";
       if (upcoming.length) html += "<div><div class='rem-section-title'>Upcoming</div><section class='card'>" + upcoming.map(row).join("") + "</section></div>";
-      if (!overdue.length && !todayL.length && !upcoming.length && completed.length) html += "<div class='empty-note' style='padding:8px 4px;'>All done for now.</div>";
+      if (!overdue.length && !todayL.length && !upcoming.length && (completed.length || skipped.length)) html += "<div class='empty-note' style='padding:8px 4px;'>All done for now.</div>";
       if (completed.length) {
         html += "<section class='card'><div class='completed-toggle' id='completedToggle'><span class='lbl'>Completed (" + completed.length + ")</span>" +
           "<svg class='icon sm'><use href='#icon-check' style='opacity:0'></use><polyline points='9,6 15,12 9,18' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg></div>" +
           "<div class='completed-body' id='completedBody'>" + completed.map(row).join("") + "</div></section>";
+      }
+      if (skipped.length) {
+        html += "<section class='card'><div class='completed-toggle' id='skippedToggle'><span class='lbl'>Skipped (" + skipped.length + ")</span>" +
+          "<svg class='icon sm'><polyline points='9,6 15,12 9,18' fill='none' stroke='currentColor' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/></svg></div>" +
+          "<div class='completed-body' id='skippedBody'>" + skipped.map(row).join("") + "</div></section>";
       }
     }
     document.getElementById("remindersList").innerHTML = html;
@@ -1254,6 +1473,12 @@
       document.getElementById("completedBody").classList.toggle("open");
       return;
     }
+    var skToggle = ev.target.closest("#skippedToggle");
+    if (skToggle) {
+      skToggle.classList.toggle("open");
+      document.getElementById("skippedBody").classList.toggle("open");
+      return;
+    }
     var check = ev.target.closest(".rem-check");
     if (check) { toggleReminderComplete(check.dataset.id); return; }
     var del = ev.target.closest(".rem-del");
@@ -1264,11 +1489,57 @@
 
   function renderBadge() {
     var tk = todayKey();
-    var n = reminders.filter(function (r) { return !r.completed && r.date <= tk; }).length;
+    var n = reminders.filter(function (r) { return !r.completed && !r.skipped && r.date <= tk; }).length;
     var badge = document.getElementById("remBadge");
     if (n > 0) { badge.style.display = "flex"; badge.textContent = n > 9 ? "9+" : n; }
     else { badge.style.display = "none"; }
   }
+
+  /* ================= missed-reminder handling ================= */
+  var missedBanner = document.getElementById("missedBanner");
+  var missedReminderId = null;
+
+  function nextMissedReminder() {
+    var tk = todayKey();
+    return reminders.find(function (r) { return !r.completed && !r.skipped && r.date < tk; }) || null;
+  }
+  function checkMissedReminders() {
+    if (ringing || missedBanner.classList.contains("show")) return;
+    var r = nextMissedReminder();
+    if (!r) return;
+    missedReminderId = r.id;
+    document.getElementById("missedTitle").textContent = r.title + " — " + relDateLabel(r.date) + (r.time ? " · " + to12(r.time) : "");
+    missedBanner.classList.add("show");
+  }
+  function closeMissedBanner() { missedBanner.classList.remove("show"); missedReminderId = null; }
+
+  document.getElementById("missedComplete").addEventListener("click", function () {
+    var r = reminders.find(function (x) { return x.id === missedReminderId; });
+    if (r) { r.completed = true; saveReminders(); renderReminders(); renderDueToday(); renderBadge(); }
+    closeMissedBanner();
+    setTimeout(checkMissedReminders, 300);
+  });
+  document.getElementById("missedTomorrow").addEventListener("click", function () {
+    var r = reminders.find(function (x) { return x.id === missedReminderId; });
+    if (r) {
+      var d = new Date(); d.setDate(d.getDate() + 1);
+      r.date = dateKey(d); r._firedMinute = null;
+      saveReminders(); renderReminders(); renderDueToday(); renderBadge();
+    }
+    closeMissedBanner();
+    setTimeout(checkMissedReminders, 300);
+  });
+  document.getElementById("missedReschedule").addEventListener("click", function () {
+    var r = reminders.find(function (x) { return x.id === missedReminderId; });
+    closeMissedBanner();
+    if (r) openRemSheet(r);
+  });
+  document.getElementById("missedSkip").addEventListener("click", function () {
+    var r = reminders.find(function (x) { return x.id === missedReminderId; });
+    if (r) { r.skipped = true; saveReminders(); renderReminders(); renderDueToday(); renderBadge(); }
+    closeMissedBanner();
+    setTimeout(checkMissedReminders, 300);
+  });
 
   /* ================= reminder sheet ================= */
   var remSheetBackdrop = document.getElementById("remSheetBackdrop");
@@ -1381,7 +1652,7 @@
     subjectDay[key] = rec;
     saveSubjectDay();
     refreshSubjectStatusUI();
-    renderTodaysWork(); renderStreaks(); renderScoreCard(); renderWeeklyGraph();
+    renderTodaysWork(); renderStreaks(); renderScoreCard(); renderWeeklyGraph(); renderWeeklyReport();
     document.getElementById("subjectStreakLine").textContent = describeStreak(computeStreak(editingSubjectId));
   });
 
@@ -1395,7 +1666,7 @@
     rec.minutes = isNaN(v) ? 0 : Math.max(0, v);
     subjectDay[key] = rec;
     saveSubjectDay();
-    renderScoreCard(); renderWeeklyGraph(); renderTodaysWork();
+    renderScoreCard(); renderWeeklyGraph(); renderTodaysWork(); renderWeeklyReport();
   }
   subjectMinutes.addEventListener("change", commitMinutes);
   document.getElementById("subMinPlus15").addEventListener("click", function () { subjectMinutes.value = (parseInt(subjectMinutes.value, 10) || 0) + 15; commitMinutes(); });
@@ -1468,7 +1739,7 @@
 
   function refreshAllSubjectViews() {
     renderSubjectsList(); renderTodaysWork(); renderStreaks(); renderScoreCard(); renderWeeklyGraph();
-    if (activeTab === "subjects") renderCalendar();
+    if (activeTab === "subjects") { renderCalendar(); renderWeeklyReport(); }
   }
 
   document.getElementById("subjectSave").addEventListener("click", function () {
@@ -1493,6 +1764,151 @@
     closeSubjectSheet();
     refreshAllSubjectViews();
   });
+
+  /* ================= focus mode ================= */
+  function fmtDurationMins(mins) { var h = Math.floor(mins / 60), m = mins % 60; return (h > 0 ? h + "h " : "") + m + "m"; }
+
+  var focusState = null;
+  var focusTimerInterval = null;
+  var pendingFocusFinish = null;
+
+  function focusElapsedMs() {
+    if (!focusState) return 0;
+    return focusState.accumMs + (focusState.paused ? 0 : (Date.now() - focusState.startedAt));
+  }
+  function fmtStopwatch(ms) {
+    var totalSec = Math.floor(ms / 1000);
+    var h = Math.floor(totalSec / 3600), m = Math.floor((totalSec % 3600) / 60), s = totalSec % 60;
+    return (h > 0 ? pad2(h) + ":" : "") + pad2(m) + ":" + pad2(s);
+  }
+  function tickFocus() {
+    if (!focusState) return;
+    document.getElementById("focusTimer").textContent = fmtStopwatch(focusElapsedMs());
+  }
+  function startFocus(subjectId) {
+    var s = subjects.find(function (x) { return x.id === subjectId; });
+    if (!s) return;
+    closeSubjectSheet();
+    focusState = { subjectId: subjectId, startedAt: Date.now(), accumMs: 0, paused: false };
+    document.getElementById("focusSubjectName").textContent = s.name;
+    document.getElementById("focusPauseBtn").textContent = "Pause";
+    document.getElementById("focusActions").classList.remove("paused");
+    tickFocus();
+    if (focusTimerInterval) clearInterval(focusTimerInterval);
+    focusTimerInterval = setInterval(tickFocus, 1000);
+    document.getElementById("focusOverlay").classList.add("show");
+  }
+  document.getElementById("subjectStartFocus").addEventListener("click", function () {
+    if (editingSubjectId) startFocus(editingSubjectId);
+  });
+  document.getElementById("focusPauseBtn").addEventListener("click", function () {
+    if (!focusState) return;
+    if (focusState.paused) {
+      focusState.startedAt = Date.now();
+      focusState.paused = false;
+      this.textContent = "Pause";
+      document.getElementById("focusActions").classList.remove("paused");
+    } else {
+      focusState.accumMs += Date.now() - focusState.startedAt;
+      focusState.paused = true;
+      this.textContent = "Resume";
+      document.getElementById("focusActions").classList.add("paused");
+    }
+  });
+  document.getElementById("focusCancelBtn").addEventListener("click", function () {
+    if (focusTimerInterval) { clearInterval(focusTimerInterval); focusTimerInterval = null; }
+    document.getElementById("focusOverlay").classList.remove("show");
+    focusState = null;
+  });
+  document.getElementById("focusFinishBtn").addEventListener("click", function () {
+    if (!focusState) return;
+    var elapsedMs = focusElapsedMs();
+    if (focusTimerInterval) { clearInterval(focusTimerInterval); focusTimerInterval = null; }
+    document.getElementById("focusOverlay").classList.remove("show");
+    var mins = Math.max(1, Math.round(elapsedMs / 60000));
+    pendingFocusFinish = { subjectId: focusState.subjectId, minutes: mins };
+    focusState = null;
+    var s = subjects.find(function (x) { return x.id === pendingFocusFinish.subjectId; });
+    document.getElementById("focusFinishSubject").textContent = (s ? s.name : "Focus session") + " — " + fmtDurationMins(mins);
+    document.getElementById("focusFinishNote").value = "";
+    document.getElementById("focusFinishBackdrop").classList.add("show");
+    setTimeout(function () { document.getElementById("focusFinishNote").focus(); }, 30);
+  });
+  function closeFocusFinishSheet() { document.getElementById("focusFinishBackdrop").classList.remove("show"); }
+  document.getElementById("focusFinishDiscard").addEventListener("click", function () { pendingFocusFinish = null; closeFocusFinishSheet(); });
+  document.getElementById("focusFinishBackdrop").addEventListener("click", function (ev) { if (ev.target === this) { pendingFocusFinish = null; closeFocusFinishSheet(); } });
+  document.getElementById("focusFinishSave").addEventListener("click", function () {
+    if (!pendingFocusFinish) { closeFocusFinishSheet(); return; }
+    var dk = todayKey();
+    var key = pendingFocusFinish.subjectId + "|" + dk;
+    var rec = subjectDay[key] || { status: "none", minutes: 0 };
+    rec.minutes = (rec.minutes || 0) + pendingFocusFinish.minutes;
+    subjectDay[key] = rec;
+    saveSubjectDay();
+    var s = subjects.find(function (x) { return x.id === pendingFocusFinish.subjectId; });
+    var note = document.getElementById("focusFinishNote").value.trim();
+    var text = (s ? s.name : "Focus session") + " (" + fmtDurationMins(pendingFocusFinish.minutes) + ")" + (note ? ": " + note : "");
+    var d = new Date();
+    if (!worklog[dk]) worklog[dk] = [];
+    worklog[dk].push({ id: uid(), time: pad2(d.getHours()) + ":" + pad2(d.getMinutes()), text: text });
+    saveWorklog();
+    renderWorklog(); renderScoreCard(); renderWeeklyGraph(); renderTodaysWork(); renderStreaks(); renderWeeklyReport();
+    pendingFocusFinish = null;
+    closeFocusFinishSheet();
+  });
+
+  /* ================= weekly report ================= */
+  function computeWeeklyReport() {
+    var days = [];
+    for (var i = 6; i >= 0; i--) { var d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+    var totalMinutes = 0, totalPlanned = 0, totalCompleted = 0, totalPartial = 0, totalMissed = 0;
+    var bestDay = null, bestPct = -1;
+    var subjMinutes = {};
+    days.forEach(function (d) {
+      var dk = dateKey(d);
+      var st = computeDayStats(dk);
+      totalMinutes += st.minutes;
+      totalPlanned += st.planned;
+      totalCompleted += st.completed;
+      totalPartial += st.partial;
+      totalMissed += st.missed;
+      var pct = st.planned > 0 ? ((st.completed + st.partial * 0.5) / st.planned * 100) : -1;
+      if (pct > bestPct) { bestPct = pct; bestDay = d; }
+      subjects.forEach(function (s) {
+        var rec = subjectDay[s.id + "|" + dk];
+        if (rec && rec.minutes) subjMinutes[s.id] = (subjMinutes[s.id] || 0) + rec.minutes;
+      });
+    });
+    var completionPct = totalPlanned > 0 ? Math.round(((totalCompleted + totalPartial * 0.5) / totalPlanned) * 100) : 0;
+    var mostProductive = null, mostMin = 0;
+    Object.keys(subjMinutes).forEach(function (id) { if (subjMinutes[id] > mostMin) { mostMin = subjMinutes[id]; mostProductive = id; } });
+    return { totalMinutes: totalMinutes, completionPct: completionPct, bestDay: (bestDay && bestPct >= 0) ? bestDay : null, mostProductiveId: mostProductive, missed: totalMissed, subjMinutes: subjMinutes };
+  }
+
+  function renderWeeklyReport() {
+    var card = document.getElementById("weeklyReportCard");
+    if (!subjects.length) { card.style.display = "none"; return; }
+    card.style.display = "";
+    var r = computeWeeklyReport();
+    var h = Math.floor(r.totalMinutes / 60), m = r.totalMinutes % 60;
+    var mostSubj = r.mostProductiveId ? subjects.find(function (s) { return s.id === r.mostProductiveId; }) : null;
+    document.getElementById("reportGrid").innerHTML =
+      "<div class='report-tile'><div class='rt-label'>Total focus</div><div class='rt-value'>" + (h > 0 ? h + "h " : "") + m + "m</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Completion</div><div class='rt-value'>" + r.completionPct + "%</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Best day</div><div class='rt-value'>" + (r.bestDay ? DAY_NAMES[r.bestDay.getDay() === 0 ? 6 : r.bestDay.getDay() - 1] : "&mdash;") + "</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Most productive</div><div class='rt-value'>" + (mostSubj ? escapeHtml(mostSubj.name) : "&mdash;") + "</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Missed</div><div class='rt-value'>" + r.missed + "</div></div>";
+
+    var distEl = document.getElementById("reportDistribution");
+    if (!r.totalMinutes) { distEl.innerHTML = "<div class='empty-note'>Log some focus time to see your time distribution.</div>"; return; }
+    var sorted = subjects.map(function (s) { return { s: s, m: r.subjMinutes[s.id] || 0 }; }).filter(function (x) { return x.m > 0; }).sort(function (a, b) { return b.m - a.m; });
+    distEl.innerHTML = sorted.map(function (x) {
+      var pct = Math.round((x.m / r.totalMinutes) * 100);
+      return "<div class='dist-row'><span class='dist-label'>" + escapeHtml(x.s.name) + "</span>" +
+        "<div class='dist-track'><div class='dist-fill' style='width:" + pct + "%;background:" + subjectColorVar(x.s) + "'></div></div>" +
+        "<span class='dist-pct'>" + pct + "%</span></div>";
+    }).join("");
+  }
 
   /* ================= productivity history calendar ================= */
   var calMonth = (function () { var d = new Date(); d.setDate(1); return d; })();
@@ -1657,15 +2073,16 @@
 
   function startRinging(type, item) {
     ringing = { type: type, item: item };
-    ringTime.textContent = type === "alarm" ? item.time : (item.time || "All day");
-    ringLabel.textContent = type === "alarm" ? item.label : item.title;
+    ringTime.textContent = type === "task" ? item.start : type === "alarm" ? item.time : (item.time || "All day");
+    ringLabel.textContent = type === "reminder" ? item.title : (type === "task" ? item.title : item.label);
     doneBtn.style.display = type === "reminder" ? "" : "none";
     ringBanner.classList.add("show");
     playBeep();
     beepTimer = setInterval(playBeep, 1200);
     try {
       if (window.Notification && Notification.permission === "granted") {
-        new Notification((type === "alarm" ? "Alarm: " : "Reminder: ") + (type === "alarm" ? item.label : item.title), { tag: item.id });
+        var kindLabel = type === "alarm" ? "Alarm: " : type === "task" ? "Task starting: " : "Reminder: ";
+        new Notification(kindLabel + (type === "alarm" ? item.label : item.title), { tag: item.id });
       }
     } catch (e) {}
   }
@@ -1684,7 +2101,9 @@
   document.getElementById("snoozeBtn").addEventListener("click", function () {
     if (ringing) {
       ringing.item.snoozeUntil = Date.now() + 5 * 60 * 1000;
-      if (ringing.type === "alarm") saveAlarms(); else saveReminders();
+      if (ringing.type === "alarm") saveAlarms();
+      else if (ringing.type === "task") saveTasks();
+      else saveReminders();
     }
     stopRinging();
   });
@@ -1717,10 +2136,18 @@
 
     for (var j = 0; j < reminders.length; j++) {
       var r = reminders[j];
-      if (r.completed || !r.time) continue;
+      if (r.completed || r.skipped || !r.time) continue;
       if (r.snoozeUntil) { if (Date.now() >= r.snoozeUntil) { r.snoozeUntil = null; startRinging("reminder", r); return; } continue; }
       if (r._firedMinute === minuteKey) continue;
       if (r.date === tk && r.time === hhmm) { r._firedMinute = minuteKey; startRinging("reminder", r); return; }
+    }
+
+    for (var k = 0; k < tasks.length; k++) {
+      var tsk = tasks[k];
+      if (!tsk.reminder) continue;
+      if (tsk.snoozeUntil) { if (Date.now() >= tsk.snoozeUntil) { tsk.snoozeUntil = null; startRinging("task", tsk); return; } continue; }
+      if (tsk._firedMinute === minuteKey) continue;
+      if (tsk.day === ti && tsk.start === hhmm) { tsk._firedMinute = minuteKey; startRinging("task", tsk); return; }
     }
   }
 
@@ -1739,10 +2166,13 @@
   renderScoreCard();
   renderWeeklyGraph();
   renderCalendar();
+  renderWeeklyReport();
   renderWater();
   renderMoney();
+  renderTopPriorities();
   tickClock();
   showTab("today");
+  setTimeout(checkMissedReminders, 600);
 
   setInterval(function () {
     tickClock();
