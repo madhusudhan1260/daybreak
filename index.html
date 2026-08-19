@@ -344,6 +344,29 @@
   .cal-detail b { color: var(--ink); }
 
   .tabbar svg.icon { width: 20px; height: 20px; }
+
+  /* ---- water ---- */
+  .water-body { padding: 14px 16px 16px; }
+  .water-row { display: flex; align-items: center; justify-content: center; gap: 22px; }
+  .water-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--paper); border: 1px solid var(--line); font-size: 20px; font-weight: 800; padding: 0; color: var(--ink); flex: none; }
+  .water-count { font-size: 22px; font-weight: 800; font-variant-numeric: tabular-nums; text-align: center; min-width: 96px; }
+  .water-count .water-goal { font-size: 13px; font-weight: 600; color: var(--muted); cursor: pointer; }
+  .water-bar { height: 10px; border-radius: 999px; background: var(--line-soft); overflow: hidden; margin-top: 14px; }
+  .water-bar-fill { height: 100%; border-radius: 999px; background: var(--cat-study); transition: width .2s ease; }
+  .water-reminders { font-size: 11.5px; color: var(--muted); text-align: center; margin-top: 10px; min-height: 14px; }
+
+  /* ---- money ---- */
+  .money-summary { padding: 12px 16px 4px; }
+  .money-today { font-size: 13px; font-weight: 600; }
+  .money-today .m-spent { color: var(--danger); }
+  .money-today .m-saved { color: var(--good); }
+  .money-net { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .money-net b { color: var(--ink); }
+  .money-reminders { font-size: 11.5px; color: var(--muted); padding: 0 16px; }
+
+  .status-btns button.active { background: var(--ink); color: var(--paper); border-color: var(--ink); }
+  .status-btns button.active[data-t="spent"] { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .status-btns button.active[data-t="saved"] { background: var(--good); border-color: var(--good); color: #fff; }
 </style>
 
 <svg style="display:none" aria-hidden="true">
@@ -387,6 +410,31 @@
       <section class="card">
         <div class="card-head"><h2>Today's work</h2></div>
         <div id="todaysWorkList"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Water</h2></div>
+        <div class="water-body">
+          <div class="water-row">
+            <button class="water-btn" id="waterMinus" aria-label="Remove a glass">&minus;</button>
+            <div class="water-count"><span id="waterCountNum">0</span> <span class="water-goal" id="waterGoalNum">/ 8 glasses</span></div>
+            <button class="water-btn" id="waterPlus" aria-label="Add a glass">+</button>
+          </div>
+          <div class="water-bar" id="waterBar"><div class="water-bar-fill" id="waterBarFill" style="width:0%"></div></div>
+          <div class="water-reminders" id="waterReminders"></div>
+          <button class="btn-ghost" id="waterAddReminder" style="width:100%; margin-top:10px;">+ Add daily reminder</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><h2>Money</h2></div>
+        <div class="money-summary" id="moneySummary"></div>
+        <div id="moneyList"></div>
+        <div class="money-reminders" id="moneyReminders"></div>
+        <div style="padding:12px 16px 16px; display:flex; gap:8px;">
+          <button class="btn-ghost" id="moneyAddReminder" style="flex:1;">+ Daily reminder</button>
+          <button class="btn-primary" id="moneyAddBtn" style="flex:1;">+ Add entry</button>
+        </div>
       </section>
 
       <section class="card">
@@ -605,6 +653,33 @@
     </div>
   </div>
 
+  <!-- money sheet -->
+  <div class="sheet-backdrop" id="moneySheetBackdrop">
+    <div class="sheet">
+      <div class="sheet-handle"></div>
+      <h2 class="sheet-title">Add entry</h2>
+      <div>
+        <span class="field-label">Type</span>
+        <div class="status-btns" id="moneyTypeBtns">
+          <button data-t="spent">Spent</button>
+          <button data-t="saved">Saved</button>
+        </div>
+      </div>
+      <div>
+        <span class="field-label">Amount (&#8377;)</span>
+        <input type="text" inputmode="decimal" id="moneyAmount" placeholder="0" />
+      </div>
+      <div>
+        <span class="field-label">Note (optional)</span>
+        <input type="text" id="moneyNote" placeholder="e.g. Groceries" maxlength="40" />
+      </div>
+      <div class="row actions">
+        <button class="btn-ghost" id="moneyCancel">Cancel</button>
+        <button class="btn-primary" id="moneySave">Save</button>
+      </div>
+    </div>
+  </div>
+
   <!-- ringing overlay -->
   <div class="ring-banner" id="ringBanner">
     <div class="ring-card">
@@ -673,6 +748,13 @@
   var subjects = store.load("daybreak.subjects", []);
   var subjectItems = store.load("daybreak.subjectItems", []);
   var subjectDay = store.load("daybreak.subjectDay", {});
+  var waterLog = store.load("daybreak.water", {});
+  var waterGoal = store.load("daybreak.waterGoal", 8);
+  var moneyLog = store.load("daybreak.money", []);
+
+  function saveWater() { store.save("daybreak.water", waterLog); }
+  function saveWaterGoal() { store.save("daybreak.waterGoal", waterGoal); }
+  function saveMoney() { store.save("daybreak.money", moneyLog); }
 
   function saveTasks() { store.save("daybreak.tasks", tasks); }
   function saveAlarms() { store.save("daybreak.alarms", alarms); }
@@ -901,6 +983,115 @@
     if (check) { cycleSubjectStatus(check.dataset.id); return; }
     var row = ev.target.closest(".agenda-row");
     if (row) { var s = subjects.find(function (x) { return x.id === row.dataset.id; }); if (s) openSubjectSheet(s); }
+  });
+
+  /* ================= water ================= */
+  function waterReminderAlarms() { return alarms.filter(function (a) { return /water/i.test(a.label); }); }
+
+  function renderWater() {
+    var dk = todayKey();
+    var count = waterLog[dk] || 0;
+    document.getElementById("waterCountNum").textContent = count;
+    document.getElementById("waterGoalNum").textContent = "/ " + waterGoal + " glasses";
+    var pct = Math.max(0, Math.min(100, Math.round((count / waterGoal) * 100)));
+    document.getElementById("waterBarFill").style.width = pct + "%";
+    var wAlarms = waterReminderAlarms();
+    document.getElementById("waterReminders").textContent = wAlarms.length
+      ? "Reminder" + (wAlarms.length > 1 ? "s" : "") + " set: " + wAlarms.map(function (a) { return a.time; }).join(", ")
+      : "";
+  }
+  document.getElementById("waterPlus").addEventListener("click", function () {
+    var dk = todayKey();
+    waterLog[dk] = (waterLog[dk] || 0) + 1;
+    saveWater(); renderWater();
+  });
+  document.getElementById("waterMinus").addEventListener("click", function () {
+    var dk = todayKey();
+    waterLog[dk] = Math.max(0, (waterLog[dk] || 0) - 1);
+    saveWater(); renderWater();
+  });
+  document.getElementById("waterGoalNum").addEventListener("click", function () {
+    var v = window.prompt("Daily water goal (glasses):", waterGoal);
+    if (v === null) return;
+    var n = parseInt(v, 10);
+    if (!isNaN(n) && n > 0) { waterGoal = n; saveWaterGoal(); renderWater(); }
+  });
+  document.getElementById("waterAddReminder").addEventListener("click", function () {
+    openAlarmSheet({ label: "Drink water", time: "10:00", days: [0, 1, 2, 3, 4, 5, 6] });
+  });
+
+  /* ================= money ================= */
+  function moneyReminderAlarms() { return alarms.filter(function (a) { return /money|expense|spending/i.test(a.label); }); }
+
+  function computeMoneyToday() {
+    var dk = todayKey(), spent = 0, saved = 0;
+    moneyLog.filter(function (m) { return m.date === dk; }).forEach(function (m) {
+      if (m.type === "spent") spent += m.amount; else saved += m.amount;
+    });
+    return { spent: spent, saved: saved };
+  }
+  function computeMoneyAllTime() {
+    var spent = 0, saved = 0;
+    moneyLog.forEach(function (m) { if (m.type === "spent") spent += m.amount; else saved += m.amount; });
+    return { spent: spent, saved: saved, net: saved - spent };
+  }
+  function renderMoney() {
+    var t = computeMoneyToday(), all = computeMoneyAllTime();
+    document.getElementById("moneySummary").innerHTML =
+      "<div class='money-today'>Today &middot; <span class='m-spent'>&minus;&#8377;" + t.spent.toFixed(0) + " spent</span> &middot; <span class='m-saved'>+&#8377;" + t.saved.toFixed(0) + " saved</span></div>" +
+      "<div class='money-net'>All-time net: <b>" + (all.net >= 0 ? "+" : "&minus;") + "&#8377;" + Math.abs(all.net).toFixed(0) + "</b></div>";
+    var todays = moneyLog.filter(function (m) { return m.date === todayKey(); }).slice().reverse();
+    var el = document.getElementById("moneyList");
+    if (!todays.length) { el.innerHTML = "<div class='empty-note'>Nothing logged today.</div>"; }
+    else {
+      el.innerHTML = todays.map(function (m) {
+        return "<div class='wl-row'><span class='wl-time mono' style='width:auto;color:" + (m.type === "spent" ? "var(--danger)" : "var(--good)") + "'>" +
+          (m.type === "spent" ? "&minus;" : "+") + "&#8377;" + m.amount + "</span>" +
+          "<span class='wl-text'>" + escapeHtml(m.note || (m.type === "spent" ? "Spent" : "Saved")) + "</span>" +
+          "<button class='wl-del' data-id='" + m.id + "' aria-label='Delete'>&times;</button></div>";
+      }).join("");
+    }
+    var mAlarms = moneyReminderAlarms();
+    document.getElementById("moneyReminders").textContent = mAlarms.length
+      ? "Reminder" + (mAlarms.length > 1 ? "s" : "") + " set: " + mAlarms.map(function (a) { return a.time; }).join(", ")
+      : "";
+  }
+  document.getElementById("moneyList").addEventListener("click", function (ev) {
+    var btn = ev.target.closest(".wl-del");
+    if (!btn) return;
+    moneyLog = moneyLog.filter(function (x) { return x.id !== btn.dataset.id; });
+    saveMoney(); renderMoney();
+  });
+  document.getElementById("moneyAddReminder").addEventListener("click", function () {
+    openAlarmSheet({ label: "Log money spent/saved", time: "21:00", days: [0, 1, 2, 3, 4, 5, 6] });
+  });
+
+  var moneySheetBackdrop = document.getElementById("moneySheetBackdrop");
+  var moneyType = "spent";
+  document.getElementById("moneyTypeBtns").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button"); if (!b) return;
+    moneyType = b.dataset.t;
+    document.querySelectorAll("#moneyTypeBtns button").forEach(function (x) { x.classList.toggle("active", x === b); });
+  });
+  function openMoneySheet() {
+    moneyType = "spent";
+    document.querySelectorAll("#moneyTypeBtns button").forEach(function (x) { x.classList.toggle("active", x.dataset.t === "spent"); });
+    document.getElementById("moneyAmount").value = "";
+    document.getElementById("moneyNote").value = "";
+    moneySheetBackdrop.classList.add("show");
+    setTimeout(function () { document.getElementById("moneyAmount").focus(); }, 30);
+  }
+  function closeMoneySheet() { moneySheetBackdrop.classList.remove("show"); }
+  document.getElementById("moneyAddBtn").addEventListener("click", openMoneySheet);
+  document.getElementById("moneyCancel").addEventListener("click", closeMoneySheet);
+  moneySheetBackdrop.addEventListener("click", function (ev) { if (ev.target === moneySheetBackdrop) closeMoneySheet(); });
+  document.getElementById("moneySave").addEventListener("click", function () {
+    var amt = parseFloat(document.getElementById("moneyAmount").value);
+    if (isNaN(amt) || amt <= 0) { document.getElementById("moneyAmount").focus(); return; }
+    moneyLog.push({ id: uid(), date: todayKey(), type: moneyType, amount: amt, note: document.getElementById("moneyNote").value.trim() });
+    saveMoney();
+    closeMoneySheet();
+    renderMoney();
   });
 
   /* ================= schedule tab ================= */
@@ -1360,11 +1551,11 @@
   var alarmDaysEl = document.getElementById("alarmDays");
   var selAlarmDays = [];
 
-  function openAlarmSheet() {
-    document.getElementById("alarmLabel").value = "";
-    document.getElementById("alarmTime").value = "07:00";
-    selAlarmDays = [];
-    alarmDaysEl.querySelectorAll(".daychip").forEach(function (c) { c.classList.remove("on"); });
+  function openAlarmSheet(preset) {
+    document.getElementById("alarmLabel").value = preset && preset.label ? preset.label : "";
+    document.getElementById("alarmTime").value = preset && preset.time ? preset.time : "07:00";
+    selAlarmDays = preset && preset.days ? preset.days.slice() : [];
+    alarmDaysEl.querySelectorAll(".daychip").forEach(function (c) { c.classList.toggle("on", selAlarmDays.indexOf(+c.dataset.d) !== -1); });
     alarmSheetBackdrop.classList.add("show");
   }
   function closeAlarmSheet() { alarmSheetBackdrop.classList.remove("show"); }
@@ -1388,7 +1579,7 @@
     saveAlarms();
     if (window.Notification && Notification.permission === "default") { try { Notification.requestPermission(); } catch (e) {} }
     closeAlarmSheet();
-    renderAlarms(); renderHeroNext();
+    renderAlarms(); renderHeroNext(); renderWater(); renderMoney();
   });
 
   function renderAlarms() {
@@ -1414,7 +1605,7 @@
     if (!btn) return;
     alarms = alarms.filter(function (x) { return x.id !== btn.dataset.id; });
     saveAlarms();
-    renderAlarms(); renderHeroNext();
+    renderAlarms(); renderHeroNext(); renderWater(); renderMoney();
   });
 
   /* ================= hero next-alarm ================= */
@@ -1548,6 +1739,8 @@
   renderScoreCard();
   renderWeeklyGraph();
   renderCalendar();
+  renderWater();
+  renderMoney();
   tickClock();
   showTab("today");
 
