@@ -308,6 +308,7 @@
   .status-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--line); background: none; padding: 0; display: flex; align-items: center; justify-content: center; color: #fff; flex: none; }
   .status-check.st-done { background: var(--good); border-color: var(--good); }
   .status-check.st-partial { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .status-check.st-none { border-color: var(--danger); color: var(--danger); }
   .status-btns { display: flex; gap: 6px; }
   .status-btns button { flex: 1; padding: 8px 4px; font-size: 12px; background: var(--paper); border: 1px solid var(--line); color: var(--muted); }
   .status-btns button.active[data-s="done"] { background: var(--good); border-color: var(--good); color: #fff; }
@@ -451,6 +452,7 @@
   <symbol id="icon-subjects" viewBox="0 0 24 24"><polygon points="12,3 21,8 12,13 3,8"/><polyline points="3,12 12,17 21,12"/><polyline points="3,16 12,21 21,16"/></symbol>
   <symbol id="icon-chev-l" viewBox="0 0 24 24"><polyline points="15,5 8,12 15,19"/></symbol>
   <symbol id="icon-chev-r" viewBox="0 0 24 24"><polyline points="9,5 16,12 9,19"/></symbol>
+  <symbol id="icon-x" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></symbol>
 </svg>
 
 <div class="app tab-today" id="appRoot">
@@ -731,6 +733,14 @@
           <button class="swatch" data-c="other" style="background:var(--cat-other)" aria-label="Rose"></button>
           <button class="swatch" data-c="accent" style="background:var(--accent)" aria-label="Amber"></button>
         </div>
+      </div>
+      <div>
+        <span class="field-label">Which days</span>
+        <div class="daychips" id="subjectDayChips">
+          <div class="daychip" data-d="0">M</div><div class="daychip" data-d="1">T</div><div class="daychip" data-d="2">W</div>
+          <div class="daychip" data-d="3">T</div><div class="daychip" data-d="4">F</div><div class="daychip" data-d="5">S</div><div class="daychip" data-d="6">S</div>
+        </div>
+        <div class="empty-note" style="padding:6px 0 0;">No days selected = every day</div>
       </div>
 
       <div id="subjectExtras" style="display:none;">
@@ -1220,7 +1230,9 @@
   function subjectColorVar(s) { return s.color === "accent" ? "var(--accent)" : "var(--cat-" + s.color + ")"; }
 
   function computeDayStats(dk) {
-    var relevant = subjects.filter(function (s) { return (s.createdAt || "0000-00-00") <= dk; });
+    var dObj = parseKey(dk);
+    var dIdx = dObj.getDay() === 0 ? 6 : dObj.getDay() - 1;
+    var relevant = subjects.filter(function (s) { return (s.createdAt || "0000-00-00") <= dk && subjectAppliesOnDay(s, dIdx); });
     var completed = 0, partial = 0, minutes = 0;
     relevant.forEach(function (s) {
       var rec = subjectDay[s.id + "|" + dk];
@@ -1233,10 +1245,16 @@
   }
 
   function computeStreak(subjectId) {
+    var s = subjects.find(function (x) { return x.id === subjectId; });
+    var days = s && s.days && s.days.length ? s.days : null;
     var d = new Date();
-    if (!(subjectDay[subjectId + "|" + dateKey(d)] && subjectDay[subjectId + "|" + dateKey(d)].status === "done")) d.setDate(d.getDate() - 1);
-    var streak = 0;
-    while (true) {
+    var todayApplies = !days || days.indexOf(todayIdx()) !== -1;
+    var todayDone = subjectDay[subjectId + "|" + dateKey(d)] && subjectDay[subjectId + "|" + dateKey(d)].status === "done";
+    if (!todayApplies || !todayDone) d.setDate(d.getDate() - 1);
+    var streak = 0, guard = 0;
+    while (guard++ < 3660) {
+      var dIdx = d.getDay() === 0 ? 6 : d.getDay() - 1;
+      if (days && days.indexOf(dIdx) === -1) { d.setDate(d.getDate() - 1); continue; }
       var k = subjectId + "|" + dateKey(d);
       if (subjectDay[k] && subjectDay[k].status === "done") { streak++; d.setDate(d.getDate() - 1); } else break;
     }
@@ -1428,17 +1446,26 @@
     }).join("");
   }
 
+  function subjectAppliesOnDay(s, dayIdx) { return !s.days || !s.days.length || s.days.indexOf(dayIdx) !== -1; }
+  function statusIcon(status) {
+    return status === "done" ? "<svg class='icon sm'><use href='#icon-check'></use></svg>" :
+      status === "partial" ? "<svg class='icon sm'><use href='#icon-dash'></use></svg>" :
+      "<svg class='icon sm'><use href='#icon-x'></use></svg>";
+  }
+
   function renderTodaysWork() {
     var dk = todayKey();
+    var ti = todayIdx();
     var el = document.getElementById("todaysWorkList");
+    var todaySubjects = subjects.filter(function (s) { return subjectAppliesOnDay(s, ti); });
     if (!subjects.length) { el.innerHTML = "<div class='empty-note'>No subjects yet. Open the Subjects tab to add one — Gym, Java practice, a project, anything you want to track daily.</div>"; return; }
-    el.innerHTML = subjects.map(function (s) {
+    if (!todaySubjects.length) { el.innerHTML = "<div class='empty-note'>Nothing scheduled for today.</div>"; return; }
+    el.innerHTML = todaySubjects.map(function (s) {
       var rec = subjectDay[s.id + "|" + dk];
       var status = rec ? rec.status : "none";
       var minutes = rec ? (rec.minutes || 0) : 0;
-      var icon = status === "done" ? "<svg class='icon sm'><use href='#icon-check'></use></svg>" : status === "partial" ? "<svg class='icon sm'><use href='#icon-dash'></use></svg>" : "";
       return "<div class='agenda-row' data-id='" + s.id + "'>" +
-        "<button class='status-check st-" + status + "' data-id='" + s.id + "'>" + icon + "</button>" +
+        "<button class='status-check st-" + status + "' data-id='" + s.id + "'>" + statusIcon(status) + "</button>" +
         "<span class='agenda-dot' style='background:" + subjectColorVar(s) + "'></span>" +
         "<span class='agenda-title'>" + escapeHtml(s.name) + "</span>" +
         (minutes > 0 ? "<span class='agenda-time mono'>" + minutes + "m</span>" : "") +
@@ -1702,7 +1729,13 @@
     var addedSubjects = 0, addedTasks = 0;
     TIMETABLE_SUBJECTS.forEach(function (s) {
       var exists = subjects.some(function (x) { return x.name.toLowerCase() === s.name.toLowerCase(); });
-      if (!exists) { subjects.push({ id: uid(), name: s.name, color: s.color, createdAt: todayKey() }); addedSubjects++; }
+      if (!exists) {
+        var days = [];
+        TIMETABLE_SEED.forEach(function (item) { if (item.title === s.name && days.indexOf(item.day) === -1) days.push(item.day); });
+        days.sort(function (a, b) { return a - b; });
+        subjects.push({ id: uid(), name: s.name, color: s.color, days: days, createdAt: todayKey() });
+        addedSubjects++;
+      }
     });
     if (addedSubjects) saveSubjects();
 
@@ -1716,6 +1749,8 @@
     if (addedTasks) saveTasks();
 
     renderSubjectsList(); renderSchedule(); renderDueToday(); renderTopPriorities();
+    renderTodaysWork(); renderStreaks(); renderScoreCard(); renderWeeklyGraph(); renderWeeklyReport();
+    if (activeTab === "subjects") renderCalendar();
     var btn = document.getElementById("importTimetableBtn");
     btn.textContent = (addedTasks || addedSubjects) ? ("Imported " + addedTasks + " classes, " + addedSubjects + " subjects") : "Already imported";
     setTimeout(function () { btn.textContent = "Import college timetable"; }, 3000);
@@ -2051,9 +2086,11 @@
     if (!subjects.length) { el.innerHTML = "<div class='empty-note'>No subjects yet. Tap + to add one — track anything you want to do daily, like Gym, Java practice, or a project.</div>"; return; }
     el.innerHTML = subjects.map(function (s) {
       var streak = computeStreak(s.id);
+      var daysLabel = s.days && s.days.length ? s.days.map(function (d) { return DAY_NAMES[d]; }).join(", ") : "Every day";
       return "<div class='agenda-row' data-id='" + s.id + "'>" +
         "<span class='agenda-dot' style='background:" + subjectColorVar(s) + "'></span>" +
-        "<span class='agenda-title'>" + escapeHtml(s.name) + "</span>" +
+        "<div class='agenda-body'><span class='agenda-title'>" + escapeHtml(s.name) + "</span>" +
+        "<span class='agenda-sub'>" + daysLabel + "</span></div>" +
         (streak > 0 ? "<span class='agenda-time'>" + streak + "d streak</span>" : "") +
         "</div>";
     }).join("");
@@ -2074,11 +2111,22 @@
   var subjectStatusBtns = document.getElementById("subjectStatusBtns");
   var editingSubjectId = null;
   var selectedSubjectColor = "work";
+  var subjectDayChipsEl = document.getElementById("subjectDayChips");
+  var selSubjectDays = [];
 
   subjectSwatches.addEventListener("click", function (ev) {
     var b = ev.target.closest(".swatch"); if (!b) return;
     selectedSubjectColor = b.dataset.c;
     subjectSwatches.querySelectorAll(".swatch").forEach(function (x) { x.classList.toggle("selected", x === b); });
+  });
+
+  subjectDayChipsEl.addEventListener("click", function (ev) {
+    var chip = ev.target.closest(".daychip");
+    if (!chip) return;
+    var d = +chip.dataset.d;
+    var i = selSubjectDays.indexOf(d);
+    if (i >= 0) { selSubjectDays.splice(i, 1); chip.classList.remove("on"); }
+    else { selSubjectDays.push(d); chip.classList.add("on"); }
   });
 
   function refreshSubjectStatusUI() {
@@ -2158,6 +2206,7 @@
       document.getElementById("subjectSheetTitle").textContent = existing.name;
       subjectName.value = existing.name;
       selectedSubjectColor = existing.color;
+      selSubjectDays = existing.days ? existing.days.slice() : [];
       subjectExtras.style.display = "";
       document.getElementById("subjectDeleteBtn").style.display = "";
       refreshSubjectStatusUI();
@@ -2170,9 +2219,11 @@
       document.getElementById("subjectSheetTitle").textContent = "New subject";
       subjectName.value = "";
       selectedSubjectColor = "work";
+      selSubjectDays = [];
       subjectExtras.style.display = "none";
     }
     subjectSwatches.querySelectorAll(".swatch").forEach(function (x) { x.classList.toggle("selected", x.dataset.c === selectedSubjectColor); });
+    subjectDayChipsEl.querySelectorAll(".daychip").forEach(function (c) { c.classList.toggle("on", selSubjectDays.indexOf(+c.dataset.d) !== -1); });
     subjectSheetBackdrop.classList.add("show");
     setTimeout(function () { subjectName.focus(); }, 30);
   }
@@ -2190,9 +2241,9 @@
     if (!name) { subjectName.focus(); return; }
     if (editingSubjectId) {
       var s = subjects.find(function (x) { return x.id === editingSubjectId; });
-      s.name = name; s.color = selectedSubjectColor;
+      s.name = name; s.color = selectedSubjectColor; s.days = selSubjectDays.slice();
     } else {
-      subjects.push({ id: uid(), name: name, color: selectedSubjectColor, createdAt: todayKey() });
+      subjects.push({ id: uid(), name: name, color: selectedSubjectColor, days: selSubjectDays.slice(), createdAt: todayKey() });
     }
     saveSubjects();
     closeSubjectSheet();
