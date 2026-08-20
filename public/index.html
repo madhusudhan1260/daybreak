@@ -159,7 +159,7 @@
   .agenda-check.on { background: var(--good); border-color: var(--good); }
   .agenda-check svg { opacity: 0; }
   .agenda-check.on svg { opacity: 1; }
-  .agenda-title { font-size: 14.5px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .agenda-title { display: block; font-size: 14.5px; font-weight: 600; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .agenda-title.done { text-decoration: line-through; color: var(--muted); font-weight: 500; }
   .agenda-time { font-size: 12px; color: var(--muted); flex: none; }
 
@@ -411,6 +411,17 @@
   .dist-track { flex: 1; height: 8px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
   .dist-fill { height: 100%; border-radius: 999px; }
   .dist-pct { font-size: 11.5px; color: var(--muted); width: 34px; text-align: right; flex: none; }
+  .agenda-body { flex: 1; min-width: 0; }
+  .agenda-sub { display: block; font-size: 11px; color: var(--muted); margin-top: 1px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  /* ---- gold price ---- */
+  .gold-body { padding: 12px 16px 16px; }
+  .gold-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-top: 1px solid var(--line-soft); }
+  .gold-row:first-child { border-top: none; }
+  .gold-label { font-size: 12.5px; color: var(--muted); font-weight: 600; }
+  .gold-value { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .gold-meta { font-size: 11px; color: var(--muted); margin-top: 10px; display: flex; align-items: center; justify-content: space-between; }
+  .gold-meta button { padding: 5px 10px; font-size: 11px; }
 
   /* ---- account / cloud sync ---- */
   .topbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
@@ -509,6 +520,11 @@
       </section>
 
       <section class="card">
+        <div class="card-head"><h2>Gold price</h2></div>
+        <div class="gold-body" id="goldBody"><div class="empty-note">Loading…</div></div>
+      </section>
+
+      <section class="card">
         <div class="card-head"><h2>Scheduled today</h2></div>
         <div id="dueTodayList"></div>
       </section>
@@ -529,6 +545,7 @@
         <div class="card-head"><h2 id="scheduleDayHeading">Monday</h2></div>
         <div id="scheduleList"></div>
       </section>
+      <button class="btn-ghost" id="importTimetableBtn" style="width:100%;">Import college timetable</button>
     </section>
 
     <section class="tabpanel" id="tab-subjects" hidden>
@@ -1556,6 +1573,55 @@
     renderMoney();
   });
 
+  /* ================= gold price ================= */
+  var GOLD_CACHE_KEY = "daybreak.goldCache";
+  var GOLD_STALE_MS = 30 * 60 * 1000;
+  var GRAMS_PER_TROY_OZ = 31.1034768;
+
+  function fmtINR(n) { return "₹" + Math.round(n).toLocaleString("en-IN"); }
+
+  function renderGoldBody(state) {
+    var el = document.getElementById("goldBody");
+    if (state.loading) { el.innerHTML = "<div class='empty-note'>Loading…</div>"; return; }
+    if (state.error) { el.innerHTML = "<div class='empty-note'>Couldn't load the gold price right now.</div><div class='gold-meta'><span></span><button class='btn-ghost' id='goldRefresh'>Retry</button></div>"; return; }
+    el.innerHTML =
+      "<div class='gold-row'><span class='gold-label'>24K (999)</span><span class='gold-value'>" + fmtINR(state.per24) + "/g</span></div>" +
+      "<div class='gold-row'><span class='gold-label'>22K (916)</span><span class='gold-value'>" + fmtINR(state.per22) + "/g</span></div>" +
+      "<div class='gold-meta'><span>Updated " + state.updatedLabel + "</span><button class='btn-ghost' id='goldRefresh'>Refresh</button></div>";
+  }
+  document.getElementById("goldBody").addEventListener("click", function (ev) {
+    if (ev.target.closest("#goldRefresh")) loadGoldPrice(true);
+  });
+
+  function renderGoldFromCache(cache, isStale) {
+    var mins = Math.round((Date.now() - cache.fetchedAt) / 60000);
+    var label = mins < 1 ? "just now" : mins === 1 ? "1 min ago" : mins + " min ago";
+    renderGoldBody({ per24: cache.per24, per22: cache.per22, updatedLabel: label + (isStale ? " (offline)" : "") });
+  }
+
+  function loadGoldPrice(forceRefresh) {
+    var cached = null;
+    try { cached = JSON.parse(localStorage.getItem(GOLD_CACHE_KEY)); } catch (e) {}
+    var now = Date.now();
+    if (!forceRefresh && cached && (now - cached.fetchedAt) < GOLD_STALE_MS) { renderGoldFromCache(cached); return; }
+    renderGoldBody({ loading: true });
+    Promise.all([
+      fetch("https://api.gold-api.com/price/XAU").then(function (r) { return r.json(); }),
+      fetch("https://open.er-api.com/v6/latest/USD").then(function (r) { return r.json(); })
+    ]).then(function (results) {
+      var usdPerOz = results[0].price;
+      var inrRate = results[1].rates.INR;
+      var inrPerGram24 = (usdPerOz / GRAMS_PER_TROY_OZ) * inrRate;
+      var inrPerGram22 = inrPerGram24 * (22 / 24);
+      var cache = { fetchedAt: now, per24: inrPerGram24, per22: inrPerGram22 };
+      try { localStorage.setItem(GOLD_CACHE_KEY, JSON.stringify(cache)); } catch (e) {}
+      renderGoldFromCache(cache);
+    }).catch(function (err) {
+      console.error("gold price fetch failed", err);
+      if (cached) renderGoldFromCache(cached, true); else renderGoldBody({ error: true });
+    });
+  }
+
   /* ================= schedule tab ================= */
   function renderDaypills() {
     var ti = todayIdx();
@@ -1582,7 +1648,8 @@
       return "<div class='agenda-row' data-id='" + t.id + "'>" +
         (t.priority ? "<span class='pri-dot " + t.priority + "'></span>" : "") +
         "<span class='agenda-dot' style='background:var(--cat-" + t.cat + ")'></span>" +
-        "<span class='agenda-title'>" + escapeHtml(t.title) + "</span>" +
+        "<div class='agenda-body'><span class='agenda-title'>" + escapeHtml(t.title) + "</span>" +
+        (t.notes ? "<span class='agenda-sub'>" + escapeHtml(t.notes) + "</span>" : "") + "</div>" +
         "<span class='agenda-time mono'>" + to12(t.start) + "&ndash;" + to12(t.end) + "</span></div>";
     }).join("");
   }
@@ -1591,6 +1658,67 @@
     if (!row) return;
     var t = tasks.find(function (x) { return x.id === row.dataset.id; });
     if (t) openTaskSheet(t, t.day);
+  });
+
+  /* ================= college timetable import ================= */
+  var TIMETABLE_SUBJECTS = [
+    { name: "LEA", color: "work" },
+    { name: "THE", color: "study" },
+    { name: "SOF", color: "personal" },
+    { name: "FSD", color: "other" },
+    { name: "CNS", color: "work" },
+    { name: "JP", color: "study" },
+    { name: "DM", color: "personal" },
+    { name: "DES", color: "break" }
+  ];
+  var TIMETABLE_SEED = [
+    { day: 0, s: 1, start: "08:00", end: "08:55", title: "LEA", room: "LT 317", code: "V-KUK", cat: "work" },
+    { day: 0, s: 2, start: "09:00", end: "09:55", title: "LEA", room: "LT 317", code: "V-KUK", cat: "work" },
+    { day: 0, s: 3, start: "10:00", end: "10:55", title: "THE", room: "LT 317", code: "", cat: "study" },
+    { day: 0, s: 4, start: "11:05", end: "12:00", title: "SOF", room: "LT 317", code: "V-UDH", cat: "personal" },
+    { day: 0, s: 5, start: "12:05", end: "13:00", title: "SOF", room: "LT 317", code: "V-UDH", cat: "personal" },
+    { day: 1, s: 1, start: "08:00", end: "08:55", title: "FSD", room: "LT 107", code: "", cat: "other" },
+    { day: 1, s: 2, start: "09:00", end: "09:55", title: "FSD", room: "LT 107", code: "", cat: "other" },
+    { day: 1, s: 3, start: "10:00", end: "10:55", title: "CNS", room: "LT 317", code: "GUQ", cat: "work" },
+    { day: 1, s: 4, start: "11:05", end: "12:00", title: "JP", room: "LT 112", code: "BLE", cat: "study" },
+    { day: 1, s: 5, start: "12:05", end: "13:00", title: "JP", room: "LT 112", code: "BLE", cat: "study" },
+    { day: 2, s: 1, start: "08:00", end: "08:55", title: "CNS", room: "LT 317", code: "MIV", cat: "work" },
+    { day: 2, s: 2, start: "09:00", end: "09:55", title: "CNS", room: "LT 317", code: "MIV", cat: "work" },
+    { day: 2, s: 3, start: "10:00", end: "10:55", title: "JP", room: "LT 317", code: "", cat: "study" },
+    { day: 2, s: 4, start: "11:05", end: "12:00", title: "DM", room: "LT 317", code: "AMIT", cat: "personal" },
+    { day: 2, s: 5, start: "12:05", end: "13:00", title: "DES", room: "LT 317", code: "NIR", cat: "break" },
+    { day: 3, s: 1, start: "08:00", end: "08:55", title: "FSD", room: "LT 107", code: "SIB", cat: "other" },
+    { day: 3, s: 2, start: "09:00", end: "09:55", title: "FSD", room: "LT 107", code: "SIB", cat: "other" },
+    { day: 3, s: 3, start: "10:00", end: "10:55", title: "JP", room: "LT 317", code: "", cat: "study" },
+    { day: 3, s: 4, start: "11:05", end: "12:00", title: "THE", room: "LT 317", code: "", cat: "study" },
+    { day: 3, s: 5, start: "12:05", end: "13:00", title: "DM", room: "LT 317", code: "AMIT", cat: "personal" },
+    { day: 4, s: 1, start: "08:00", end: "08:55", title: "CNS", room: "LT 317", code: "GUQ", cat: "work" },
+    { day: 4, s: 2, start: "09:00", end: "09:55", title: "THE", room: "LT 317", code: "", cat: "study" },
+    { day: 4, s: 3, start: "10:00", end: "10:55", title: "DM", room: "LT 317", code: "AMIT", cat: "personal" },
+    { day: 4, s: 4, start: "11:05", end: "12:00", title: "DM", room: "LT 317", code: "AMIT", cat: "personal" },
+    { day: 5, s: 1, start: "08:00", end: "08:55", title: "FSD", room: "LT 107", code: "", cat: "other" }
+  ];
+  document.getElementById("importTimetableBtn").addEventListener("click", function () {
+    var addedSubjects = 0, addedTasks = 0;
+    TIMETABLE_SUBJECTS.forEach(function (s) {
+      var exists = subjects.some(function (x) { return x.name.toLowerCase() === s.name.toLowerCase(); });
+      if (!exists) { subjects.push({ id: uid(), name: s.name, color: s.color, createdAt: todayKey() }); addedSubjects++; }
+    });
+    if (addedSubjects) saveSubjects();
+
+    TIMETABLE_SEED.forEach(function (item) {
+      var exists = tasks.some(function (t) { return t.day === item.day && t.start === item.start && t.title === item.title; });
+      if (exists) return;
+      var notes = "Session " + item.s + " · " + item.room + (item.code ? " · " + item.code : "");
+      tasks.push({ id: uid(), day: item.day, title: item.title, start: item.start, end: item.end, cat: item.cat, priority: "", notes: notes, reminder: false, snoozeUntil: null, _firedMinute: null });
+      addedTasks++;
+    });
+    if (addedTasks) saveTasks();
+
+    renderSubjectsList(); renderSchedule(); renderDueToday(); renderTopPriorities();
+    var btn = document.getElementById("importTimetableBtn");
+    btn.textContent = (addedTasks || addedSubjects) ? ("Imported " + addedTasks + " classes, " + addedSubjects + " subjects") : "Already imported";
+    setTimeout(function () { btn.textContent = "Import college timetable"; }, 3000);
   });
 
   /* ================= task sheet ================= */
@@ -2431,38 +2559,49 @@
     stopRinging();
   });
 
+  var CLIENT_LOOKBACK_MINUTES = 10; // catches alarms even if the tab was backgrounded/throttled and missed the exact tick
+
+  function isDueWithinLookback(itemHHMM, nowHHMM) {
+    var due = minsOf(itemHHMM);
+    var now = minsOf(nowHHMM);
+    var delta = now - due;
+    return delta >= 0 && delta <= CLIENT_LOOKBACK_MINUTES;
+  }
+
   function checkAlarms() {
     if (ringing) return;
     var now = new Date();
     var ti = todayIdx();
     var tk = todayKey();
     var hhmm = pad2(now.getHours()) + ":" + pad2(now.getMinutes());
-    var minuteKey = tk + "-" + now.getHours() + "-" + now.getMinutes();
 
     for (var i = 0; i < alarms.length; i++) {
       var a = alarms[i];
       if (!a.enabled) continue;
       if (a.snoozeUntil) { if (Date.now() >= a.snoozeUntil) { a.snoozeUntil = null; startRinging("alarm", a); return; } continue; }
-      if (a._firedMinute === minuteKey) continue;
       var days = a.days.length ? a.days : null;
       var dueToday = days ? days.indexOf(ti) !== -1 : true;
-      if (dueToday && a.time === hhmm) { a._firedMinute = minuteKey; startRinging("alarm", a); return; }
+      var fireKey = tk + "|" + a.time;
+      if (a._firedMinute === fireKey) continue;
+      if (dueToday && isDueWithinLookback(a.time, hhmm)) { a._firedMinute = fireKey; startRinging("alarm", a); return; }
     }
 
     for (var j = 0; j < reminders.length; j++) {
       var r = reminders[j];
       if (r.completed || r.skipped || !r.time) continue;
       if (r.snoozeUntil) { if (Date.now() >= r.snoozeUntil) { r.snoozeUntil = null; startRinging("reminder", r); return; } continue; }
-      if (r._firedMinute === minuteKey) continue;
-      if (r.date === tk && r.time === hhmm) { r._firedMinute = minuteKey; startRinging("reminder", r); return; }
+      var rFireKey = tk + "|" + r.time;
+      if (r._firedMinute === rFireKey) continue;
+      if (r.date === tk && isDueWithinLookback(r.time, hhmm)) { r._firedMinute = rFireKey; startRinging("reminder", r); return; }
     }
 
     for (var k = 0; k < tasks.length; k++) {
       var tsk = tasks[k];
       if (!tsk.reminder) continue;
       if (tsk.snoozeUntil) { if (Date.now() >= tsk.snoozeUntil) { tsk.snoozeUntil = null; startRinging("task", tsk); return; } continue; }
-      if (tsk._firedMinute === minuteKey) continue;
-      if (tsk.day === ti && tsk.start === hhmm) { tsk._firedMinute = minuteKey; startRinging("task", tsk); return; }
+      var tFireKey = tk + "|" + tsk.start;
+      if (tsk._firedMinute === tFireKey) continue;
+      if (tsk.day === ti && isDueWithinLookback(tsk.start, hhmm)) { tsk._firedMinute = tFireKey; startRinging("task", tsk); return; }
     }
   }
 
@@ -2485,6 +2624,7 @@
   renderWater();
   renderMoney();
   renderTopPriorities();
+  loadGoldPrice();
   tickClock();
   showTab("today");
   setTimeout(checkMissedReminders, 600);

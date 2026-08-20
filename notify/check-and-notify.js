@@ -69,7 +69,13 @@ async function sendToUser(userRef, title, body) {
         token: tokenDoc.id,
         notification: { title: title, body: body },
         webpush: {
-          notification: { icon: "/icon-192.png", badge: "/icon-192.png" },
+          notification: {
+            icon: "/icon-192.png",
+            badge: "/icon-192.png",
+            requireInteraction: true,
+            vibrate: [200, 100, 200, 100, 200, 100, 400],
+            tag: "daybreak-alarm"
+          },
           fcmOptions: { link: "https://daybreak-36be5.web.app/" }
         }
       });
