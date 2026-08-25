@@ -193,6 +193,9 @@
   .wl-row { display: flex; align-items: baseline; gap: 10px; padding: 9px 16px; border-top: 1px solid var(--line-soft); }
   .wl-time { font-size: 11.5px; color: var(--muted); flex: none; width: 46px; }
   .wl-text { font-size: 14px; flex: 1; word-break: break-word; }
+  .wl-row:first-child { border-top: none; }
+  .period-nav { display: flex; align-items: center; justify-content: center; gap: 16px; padding: 8px 4px 12px; }
+  .period-label { font-size: 14px; font-weight: 800; min-width: 150px; text-align: center; }
   .wl-del { background: none; border: none; color: var(--muted); font-size: 13px; padding: 2px 4px; flex: none; }
 
   /* ---- day pills (schedule) ---- */
@@ -274,14 +277,14 @@
 
   /* ---- tab bar ---- */
   .tabbar { flex: 0 0 auto; display: flex; border-top: 1px solid var(--line-soft); background: var(--paper-raised); padding: 8px 4px max(8px, env(safe-area-inset-bottom)); }
-  .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-size: 10.5px; font-weight: 700; padding: 4px 2px; position: relative; }
+  .tabbar button { flex: 1; background: none; border: none; display: flex; flex-direction: column; align-items: center; gap: 2px; color: var(--muted); font-size: 9.5px; font-weight: 700; padding: 4px 1px; position: relative; }
   .tabbar button.active { color: var(--accent); }
   .tab-badge { position: absolute; top: -1px; right: 22%; min-width: 15px; height: 15px; padding: 0 3px; border-radius: 999px; background: var(--danger); color: #fff; font-size: 9.5px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
 
   /* ---- FAB ---- */
   .fab { position: fixed; right: 22px; bottom: 84px; width: 54px; height: 54px; border-radius: 50%; background: var(--accent); color: var(--accent-ink); display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 24px -6px rgba(20,24,31,0.4); z-index: 20; }
   .fab svg { width: 24px; height: 24px; }
-  .app.tab-today .fab { display: none; }
+  .app.tab-today .fab, .app.tab-work .fab { display: none; }
 
   /* ---- sheets ---- */
   .sheet-backdrop { position: fixed; inset: 0; background: rgba(20,24,31,0.5); z-index: 40; display: none; align-items: flex-end; }
@@ -373,7 +376,7 @@
   .cal-detail { padding: 0 16px 14px; font-size: 12.5px; color: var(--muted); line-height: 1.5; }
   .cal-detail b { color: var(--ink); }
 
-  .tabbar svg.icon { width: 20px; height: 20px; }
+  .tabbar svg.icon { width: 19px; height: 19px; }
 
   /* ---- water ---- */
   .water-body { padding: 14px 16px 16px; }
@@ -477,6 +480,7 @@
   <symbol id="icon-chev-l" viewBox="0 0 24 24"><polyline points="15,5 8,12 15,19"/></symbol>
   <symbol id="icon-chev-r" viewBox="0 0 24 24"><polyline points="9,5 16,12 9,19"/></symbol>
   <symbol id="icon-x" viewBox="0 0 24 24"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></symbol>
+  <symbol id="icon-work" viewBox="0 0 24 24"><polyline points="3,17 9,11 13,15 21,6"/><polyline points="15,6 21,6 21,12"/></symbol>
 </svg>
 
 <div class="app tab-today" id="appRoot">
@@ -611,6 +615,24 @@
       </section>
     </section>
 
+    <section class="tabpanel" id="tab-work" hidden>
+      <div class="status-btns" id="workPeriodBtns" style="margin:2px 4px 0;">
+        <button data-period="day">Day</button>
+        <button data-period="week">Week</button>
+        <button data-period="month">Month</button>
+      </div>
+      <div class="period-nav">
+        <button class="icon-btn" id="workPrev" aria-label="Previous"><svg class="icon sm"><use href="#icon-chev-l"></use></svg></button>
+        <span class="period-label" id="workPeriodLabel"></span>
+        <button class="icon-btn" id="workNext" aria-label="Next"><svg class="icon sm"><use href="#icon-chev-r"></use></svg></button>
+      </div>
+      <section class="card">
+        <div class="card-head"><h2>Summary</h2></div>
+        <div class="report-grid" id="workStatsGrid"></div>
+      </section>
+      <div id="workLogHistory"></div>
+    </section>
+
   </main>
 
   <button class="fab" id="fabBtn" aria-label="Add"><svg class="icon"><use href="#icon-plus"></use></svg></button>
@@ -621,6 +643,7 @@
     <button data-tab="subjects"><svg class="icon"><use href="#icon-subjects"></use></svg><span>Subjects</span></button>
     <button data-tab="reminders"><svg class="icon"><use href="#icon-reminders"></use></svg><span>Reminders</span><span class="tab-badge" id="remBadge" style="display:none;"></span></button>
     <button data-tab="alarms"><svg class="icon"><use href="#icon-alarms"></use></svg><span>Alarms</span></button>
+    <button data-tab="work"><svg class="icon"><use href="#icon-work"></use></svg><span>Work</span></button>
   </nav>
 
   <!-- task sheet -->
@@ -1248,7 +1271,7 @@
 
   var DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
   var DAY_FULL = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-  var TAB_TITLES = { today: "Today", schedule: "Schedule", subjects: "Subjects", reminders: "Reminders", alarms: "Alarms" };
+  var TAB_TITLES = { today: "Today", schedule: "Schedule", subjects: "Subjects", reminders: "Reminders", alarms: "Alarms", work: "Work" };
   var NEXT_STATUS = { none: "done", done: "partial", partial: "none" };
 
   function pad2(n) { return n < 10 ? "0" + n : "" + n; }
@@ -1357,11 +1380,12 @@
   /* ================= tab switching ================= */
   function showTab(name) {
     activeTab = name;
-    ["today", "schedule", "subjects", "reminders", "alarms"].forEach(function (t) {
+    ["today", "schedule", "subjects", "reminders", "alarms", "work"].forEach(function (t) {
       document.getElementById("tab-" + t).hidden = t !== name;
     });
     if (name === "subjects") { renderCalendar(); renderWeeklyReport(); }
     if (name === "reminders") checkMissedReminders();
+    if (name === "work") renderWorkTab();
     document.querySelectorAll(".tabbar button").forEach(function (b) {
       b.classList.toggle("active", b.dataset.tab === name);
     });
@@ -2445,9 +2469,7 @@
   });
 
   /* ================= weekly report ================= */
-  function computeWeeklyReport() {
-    var days = [];
-    for (var i = 6; i >= 0; i--) { var d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+  function computeRangeReport(days) {
     var totalMinutes = 0, totalPlanned = 0, totalCompleted = 0, totalPartial = 0, totalMissed = 0;
     var bestDay = null, bestPct = -1;
     var subjMinutes = {};
@@ -2469,7 +2491,91 @@
     var completionPct = totalPlanned > 0 ? Math.round(((totalCompleted + totalPartial * 0.5) / totalPlanned) * 100) : 0;
     var mostProductive = null, mostMin = 0;
     Object.keys(subjMinutes).forEach(function (id) { if (subjMinutes[id] > mostMin) { mostMin = subjMinutes[id]; mostProductive = id; } });
-    return { totalMinutes: totalMinutes, completionPct: completionPct, bestDay: (bestDay && bestPct >= 0) ? bestDay : null, mostProductiveId: mostProductive, missed: totalMissed, subjMinutes: subjMinutes };
+    return { totalMinutes: totalMinutes, completionPct: completionPct, bestDay: (bestDay && bestPct >= 0) ? bestDay : null, mostProductiveId: mostProductive, missed: totalMissed, planned: totalPlanned, completed: totalCompleted, subjMinutes: subjMinutes };
+  }
+  function computeWeeklyReport() {
+    var days = [];
+    for (var i = 6; i >= 0; i--) { var d = new Date(); d.setDate(d.getDate() - i); days.push(d); }
+    return computeRangeReport(days);
+  }
+
+  /* ================= work tab (day/week/month comparison) ================= */
+  var workPeriod = "day";
+  var workAnchor = new Date();
+
+  function daysForWorkPeriod() {
+    if (workPeriod === "day") return [new Date(workAnchor)];
+    if (workPeriod === "week") {
+      var start = new Date(workAnchor);
+      var jsDay = start.getDay();
+      start.setDate(start.getDate() - (jsDay === 0 ? 6 : jsDay - 1));
+      var wdays = [];
+      for (var i = 0; i < 7; i++) { var d = new Date(start); d.setDate(d.getDate() + i); wdays.push(d); }
+      return wdays;
+    }
+    var y = workAnchor.getFullYear(), m = workAnchor.getMonth();
+    var daysInMonth = new Date(y, m + 1, 0).getDate();
+    var mdays = [];
+    for (var d2 = 1; d2 <= daysInMonth; d2++) mdays.push(new Date(y, m, d2));
+    return mdays;
+  }
+  function workPeriodLabel() {
+    if (workPeriod === "day") return workAnchor.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" });
+    if (workPeriod === "week") {
+      var wdays = daysForWorkPeriod();
+      return wdays[0].toLocaleDateString(undefined, { month: "short", day: "numeric" }) + " – " + wdays[6].toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    }
+    return workAnchor.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  }
+  function shiftWorkPeriod(dir) {
+    if (workPeriod === "day") workAnchor.setDate(workAnchor.getDate() + dir);
+    else if (workPeriod === "week") workAnchor.setDate(workAnchor.getDate() + dir * 7);
+    else workAnchor.setMonth(workAnchor.getMonth() + dir);
+    renderWorkTab();
+  }
+  document.getElementById("workPeriodBtns").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button"); if (!b) return;
+    workPeriod = b.dataset.period;
+    workAnchor = new Date();
+    renderWorkTab();
+  });
+  document.getElementById("workPrev").addEventListener("click", function () { shiftWorkPeriod(-1); });
+  document.getElementById("workNext").addEventListener("click", function () { shiftWorkPeriod(1); });
+
+  function renderWorkTab() {
+    document.querySelectorAll("#workPeriodBtns button").forEach(function (b) { b.classList.toggle("active", b.dataset.period === workPeriod); });
+    document.getElementById("workPeriodLabel").textContent = workPeriodLabel();
+
+    var allDays = daysForWorkPeriod();
+    var tk = todayKey();
+    var pastDays = allDays.filter(function (d) { return dateKey(d) <= tk; });
+    var r = computeRangeReport(pastDays.length ? pastDays : allDays);
+    var h = Math.floor(r.totalMinutes / 60), m = r.totalMinutes % 60;
+    var mostSubj = r.mostProductiveId ? subjects.find(function (s) { return s.id === r.mostProductiveId; }) : null;
+    document.getElementById("workStatsGrid").innerHTML =
+      "<div class='report-tile'><div class='rt-label'>Total focus</div><div class='rt-value'>" + (h > 0 ? h + "h " : "") + m + "m</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Completion</div><div class='rt-value'>" + r.completionPct + "%</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Planned</div><div class='rt-value'>" + r.planned + "</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Completed</div><div class='rt-value'>" + r.completed + "</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Missed</div><div class='rt-value'>" + r.missed + "</div></div>" +
+      "<div class='report-tile'><div class='rt-label'>Most productive</div><div class='rt-value'>" + (mostSubj ? escapeHtml(mostSubj.name) : "—") + "</div></div>";
+
+    var entries = [];
+    pastDays.forEach(function (d) {
+      var dk = dateKey(d);
+      (worklog[dk] || []).forEach(function (e) { entries.push({ date: dk, time: e.time, text: e.text }); });
+    });
+    entries.sort(function (a, b) { if (a.date !== b.date) return a.date < b.date ? 1 : -1; return a.time < b.time ? 1 : -1; });
+    var historyEl = document.getElementById("workLogHistory");
+    if (!entries.length) { historyEl.innerHTML = "<section class='card'><div class='empty-note'>Nothing logged in this period.</div></section>"; return; }
+    var grouped = {}, order = [];
+    entries.forEach(function (e) { if (!grouped[e.date]) { grouped[e.date] = []; order.push(e.date); } grouped[e.date].push(e); });
+    historyEl.innerHTML = order.map(function (dk) {
+      var rows = grouped[dk].map(function (e) {
+        return "<div class='wl-row'><span class='wl-time mono'>" + e.time + "</span><span class='wl-text'>" + escapeHtml(e.text) + "</span></div>";
+      }).join("");
+      return "<div class='rem-section-title'>" + relDateLabel(dk) + "</div><section class='card'>" + rows + "</section>";
+    }).join("");
   }
 
   function renderWeeklyReport() {
@@ -2819,6 +2925,7 @@
   renderWeeklyGraph();
   renderCalendar();
   renderWeeklyReport();
+  renderWorkTab();
   renderWater();
   renderMoney();
   renderTopPriorities();
