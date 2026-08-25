@@ -196,6 +196,7 @@
   .rem-title.done { text-decoration: line-through; color: var(--muted); font-weight: 500; }
   .rem-meta { font-size: 12px; color: var(--muted); margin-top: 1px; }
   .rem-meta.overdue { color: var(--danger); font-weight: 600; }
+  .rem-notes { font-size: 11.5px; color: var(--muted); margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .rem-del { background: none; border: none; color: var(--muted); font-size: 18px; padding: 4px 6px; flex: none; }
   .completed-toggle { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; cursor: pointer; }
   .completed-toggle .lbl { font-size: 13px; font-weight: 700; color: var(--muted); }
@@ -222,7 +223,7 @@
   .icon-btn { background: none; border: none; color: var(--muted); font-size: 15px; padding: 4px 6px; flex: none; }
 
   /* ---- inputs / buttons ---- */
-  input[type="text"], input[type="time"], input[type="date"], select {
+  input[type="text"], input[type="time"], input[type="date"], select, textarea {
     background: var(--paper);
     border: 1px solid var(--line);
     color: var(--ink);
@@ -577,6 +578,7 @@
 
     <section class="tabpanel" id="tab-reminders" hidden>
       <div id="remindersList"></div>
+      <button class="btn-ghost" id="importPlanBtn" style="width:100%;">Import hackathon prep plan</button>
     </section>
 
     <section class="tabpanel" id="tab-alarms" hidden>
@@ -677,6 +679,10 @@
       </div>
       <div id="remTimeWrap" style="display:none;">
         <input type="time" id="remTime" />
+      </div>
+      <div>
+        <span class="field-label">Notes (optional)</span>
+        <textarea id="remNotes" rows="3" placeholder="Details, topics to cover…" style="resize:vertical;"></textarea>
       </div>
       <div class="row actions">
         <button class="btn-ghost" id="remCancel">Cancel</button>
@@ -1918,7 +1924,8 @@
       return "<div class='rem-row' data-id='" + r.id + "'>" +
         "<button class='rem-check" + (r.completed ? " on" : "") + "' data-id='" + r.id + "'><svg class='icon sm'><use href='#icon-check'></use></svg></button>" +
         "<div class='rem-body'><div class='rem-title" + (r.completed ? " done" : "") + "'>" + escapeHtml(r.title) + "</div>" +
-        "<div class='rem-meta" + overdueCls + "'>" + meta + "</div></div>" +
+        "<div class='rem-meta" + overdueCls + "'>" + meta + "</div>" +
+        (r.notes ? "<div class='rem-notes'>" + escapeHtml(r.notes) + "</div>" : "") + "</div>" +
         "<button class='rem-del' data-id='" + r.id + "' aria-label='Delete'>&times;</button></div>";
     }
 
@@ -2040,6 +2047,7 @@
       remTimeToggle.checked = !!existing.time;
       remTime.value = existing.time || "09:00";
       remTimeWrap.style.display = existing.time ? "" : "none";
+      document.getElementById("remNotes").value = existing.notes || "";
       remDelete.style.display = "";
     } else {
       editingRemId = null;
@@ -2049,6 +2057,7 @@
       remTimeToggle.checked = false;
       remTime.value = "09:00";
       remTimeWrap.style.display = "none";
+      document.getElementById("remNotes").value = "";
       remDelete.style.display = "none";
     }
     remSheetBackdrop.classList.add("show");
@@ -2062,11 +2071,12 @@
     var title = remTitle.value.trim();
     if (!title || !remDate.value) { remTitle.focus(); return; }
     var time = remTimeToggle.checked ? remTime.value : null;
+    var notes = document.getElementById("remNotes").value.trim();
     if (editingRemId) {
       var r = reminders.find(function (x) { return x.id === editingRemId; });
-      r.title = title; r.date = remDate.value; r.time = time; r._firedMinute = null;
+      r.title = title; r.date = remDate.value; r.time = time; r.notes = notes; r._firedMinute = null;
     } else {
-      reminders.push({ id: uid(), title: title, date: remDate.value, time: time, completed: false, snoozeUntil: null, _firedMinute: null });
+      reminders.push({ id: uid(), title: title, date: remDate.value, time: time, notes: notes, completed: false, snoozeUntil: null, _firedMinute: null });
       if (window.Notification && Notification.permission === "default") { try { Notification.requestPermission(); } catch (e) {} }
     }
     saveReminders();
@@ -2455,6 +2465,60 @@
       (st.minutes > 0 ? ((h > 0 ? h + "h " : "") + mi + "m focused") : "0m focused") +
       (missedRem > 0 ? ", " + missedRem + " reminder" + (missedRem > 1 ? "s" : "") + " missed" : "");
   }
+
+  /* ================= hackathon prep plan import ================= */
+  var HACKATHON_PLAN_RELATIVE = [
+    { offset: 0, title: "Day 1: Python basics for AI", notes: "Variables, lists, dicts, functions, loops, classes, JSON, file I/O, try/except, pip, venv. Practice: User → Python → JSON → Response." },
+    { offset: 1, title: "Day 2: APIs", notes: "What is an API, GET vs POST, JSON request/response, API keys, env vars, HTTP status codes, calling an API from Python. Practice: Python → LLM API → Response." },
+    { offset: 2, title: "Day 3: Git + GitHub", notes: "git init/add/commit/push/pull. Create a repo. Write a proper README: Problem, Solution, Architecture, How to run, Technologies." },
+    { offset: 3, title: "Day 4: LLM basics", notes: "LLM, tokens, context window, system/user prompt, temperature, structured output, hallucination, model selection. Goal: understand how an LLM fits inside an application." },
+    { offset: 4, title: "Day 5: Prompt engineering", notes: "Role, instructions, constraints, examples, output format, refusal conditions, context. Practice project: AI Resume Analyzer (resume + job description → score/skills_missing/recommendation JSON)." },
+    { offset: 5, title: "Day 6: Structured outputs", notes: "Make an LLM return predictable JSON (category, priority, action, reason). Understand why structured output beats parsing free text." },
+    { offset: 6, title: "Day 7: Understand RAG", notes: "Documents → chunking → embeddings → vector database → retrieval → LLM → answer. Learn embeddings, vector search, similarity, chunking, grounded answers." },
+    { offset: 7, title: "Day 8: Build a simple RAG", notes: "Use 5-10 docs (college_rules, attendance, exam_rules, library_rules, hostel_rules). Build: question → retriever → relevant document → LLM → answer." },
+    { offset: 8, title: "Day 9: RAG quality + hallucination control", notes: "If the answer isn't in the documents, say \"I don't have enough information\" instead of inventing one. Practice wrong/ambiguous/missing/conflicting/irrelevant cases." },
+    { offset: 9, title: "Day 10: What is an AI Agent", notes: "Chatbot (question→LLM→answer) vs agent loop (LLM→decide→use tool→observe→reason→next action→final answer). Learn tools, tool calling, planning, memory, state, decisions." },
+    { offset: 10, title: "Day 11: Build your first agent", notes: "Build a Research Agent with tools (calculator, document search, web search). No need for LangChain — a small custom orchestration loop is fine." },
+    { offset: 11, title: "Day 12: Agent safety", notes: "Max iterations (e.g. 5), tool validation (don't blindly execute model requests), fallback on failure (retry → still fails → safe fallback), escalation (\"I don't know\" / escalate to human)." },
+    { offset: 12, title: "Day 13: Build a realistic problem — College Support Agent", notes: "Give it 10-20 college documents. Questions: attendance, exam dates, fee deadline, leave application, lost ID card. Pipeline: question → classify → retrieve → reason → answer or escalate." },
+    { offset: 13, title: "Day 14: Add adversarial cases", notes: "Try to break your own agent: \"ignore previous instructions\", requests for confidential info or made-up answers, unrelated tasks. Also test empty/very long/misspelled input, conflicting docs, multi-part questions." },
+    { offset: 14, title: "Day 15: Improve the architecture", notes: "Input handler → classifier → (relevant → retriever → context → LLM) or (unsafe/unknown → escalate) → output validator → final answer. Add logging, error handling, retry, validation, max iterations, clear prompts." },
+    { offset: 15, title: "Day 16: Practice with one AI coding tool", notes: "Pick one (Cursor / Claude Code / Codex / Copilot). Loop: you plan → AI implements → you inspect → you test → AI fixes → you verify. Give specific technical instructions, not vague ones." },
+    { offset: 16, title: "Day 17: Practice explaining your project", notes: "Rehearse the AI Judge Q&A: why this model, why RAG, why this architecture, hallucination handling, failure handling, why this database, malicious-input handling, what you'd improve, why an agent vs a plain LLM call, code walkthrough." },
+    { offset: 17, title: "Day 18: Full mock hackathon (6-8 hours)", notes: "Hour 1 understand problem, hour 2 design architecture, hours 3-5 build, hour 6 test, hour 7 fix failures, hour 8 README + submission prep. Correctness over a fancy UI." }
+  ];
+  var HACKATHON_PLAN_FIXED = [
+    { date: "2026-09-11", title: "Day 19: Final preparation", notes: "Don't learn anything new. Check laptop (editor, Python, Git, GitHub, Node if needed, packages, browser, terminal) and accounts (HackerRank, GitHub, AI tool, API accounts, email). Prepare an empty starter folder (src/, data/, tests/, .env, .gitignore, requirements.txt, README.md) — don't pre-build the solution. Revise: Python → APIs → LLM → Prompting → RAG → Agents → Tool calling → Safety → Testing. Sleep properly." },
+    { date: "2026-09-12", title: "Hackathon day", notes: "5:00 PM reach venue. 5:00-6:00 PM settle in, meet people, prepare laptop. 6:00 PM challenge arrives — don't start coding immediately, understand the problem first." }
+  ];
+  document.getElementById("importPlanBtn").addEventListener("click", function () {
+    var added = 0;
+    var base = new Date();
+    var baseMidnight = new Date(base.getFullYear(), base.getMonth(), base.getDate());
+    var finalPrepDate = new Date(2026, 8, 11); // Sep 11, 2026 — fixed, day before the real hackathon date
+    var daysUntilFinalPrep = Math.round((finalPrepDate - baseMidnight) / 86400000);
+    var maxOffset = Math.max(0, daysUntilFinalPrep - 1); // last relative day must land strictly before final-prep day
+    HACKATHON_PLAN_RELATIVE.forEach(function (item) {
+      var offset = Math.min(item.offset, maxOffset);
+      var d = new Date(base); d.setDate(d.getDate() + offset);
+      var dk = dateKey(d);
+      var exists = reminders.some(function (r) { return r.title === item.title; });
+      if (exists) return;
+      reminders.push({ id: uid(), title: item.title, date: dk, time: null, notes: item.notes, completed: false, snoozeUntil: null, _firedMinute: null });
+      added++;
+    });
+    HACKATHON_PLAN_FIXED.forEach(function (item) {
+      var exists = reminders.some(function (r) { return r.title === item.title; });
+      if (exists) return;
+      reminders.push({ id: uid(), title: item.title, date: item.date, time: null, notes: item.notes, completed: false, snoozeUntil: null, _firedMinute: null });
+      added++;
+    });
+    if (added) saveReminders();
+    renderReminders(); renderDueToday(); renderBadge();
+    var btn = document.getElementById("importPlanBtn");
+    btn.textContent = added ? ("Imported " + added + " days") : "Already imported";
+    setTimeout(function () { btn.textContent = "Import hackathon prep plan"; }, 3000);
+  });
 
   /* ================= alarms tab ================= */
   var alarmSheetBackdrop = document.getElementById("alarmSheetBackdrop");
