@@ -2,6 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<script>
+(function () {
+  try {
+    var tm = JSON.parse(localStorage.getItem("daybreak.themeMode") || '"system"');
+    var ac = JSON.parse(localStorage.getItem("daybreak.accent") || '"amber"');
+    if (tm === "light" || tm === "dark") document.documentElement.setAttribute("data-theme", tm);
+    if (ac && ac !== "amber") document.documentElement.setAttribute("data-accent", ac);
+  } catch (e) {}
+})();
+</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -78,6 +88,19 @@
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px -12px rgba(0,0,0,0.5);
     --shadow-lg: 0 30px 70px -20px rgba(0,0,0,0.7);
   }
+
+  /* ---- accent color choices ---- */
+  :root[data-accent="blue"] { --accent: #2f6fed; --accent-ink: #ffffff; --accent-soft: #dbe6fd; }
+  :root[data-accent="emerald"] { --accent: #1f9d6b; --accent-ink: #ffffff; --accent-soft: #d3f0e3; }
+  :root[data-accent="rose"] { --accent: #d1447a; --accent-ink: #ffffff; --accent-soft: #f6dbe7; }
+  @media (prefers-color-scheme: dark) {
+    :root[data-accent="blue"]:not([data-theme="light"]) { --accent: #5b8cf0; --accent-ink: #10131a; --accent-soft: #1c2c4a; }
+    :root[data-accent="emerald"]:not([data-theme="light"]) { --accent: #3ecf8e; --accent-ink: #10131a; --accent-soft: #163829; }
+    :root[data-accent="rose"]:not([data-theme="light"]) { --accent: #e881ab; --accent-ink: #10131a; --accent-soft: #3a1f2b; }
+  }
+  :root[data-theme="dark"][data-accent="blue"] { --accent: #5b8cf0; --accent-ink: #10131a; --accent-soft: #1c2c4a; }
+  :root[data-theme="dark"][data-accent="emerald"] { --accent: #3ecf8e; --accent-ink: #10131a; --accent-soft: #163829; }
+  :root[data-theme="dark"][data-accent="rose"] { --accent: #e881ab; --accent-ink: #10131a; --accent-soft: #3a1f2b; }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; }
@@ -820,6 +843,21 @@
     <div class="sheet">
       <div class="sheet-handle"></div>
 
+      <div>
+        <span class="field-label">Appearance</span>
+        <div class="status-btns" id="themeModeBtns">
+          <button data-theme="system">Auto</button>
+          <button data-theme="light">Light</button>
+          <button data-theme="dark">Dark</button>
+        </div>
+        <div class="swatch-row" id="accentSwatches" style="margin-top:10px;">
+          <button class="swatch" data-accent="amber" style="background:#d98c26" aria-label="Amber"></button>
+          <button class="swatch" data-accent="blue" style="background:#2f6fed" aria-label="Blue"></button>
+          <button class="swatch" data-accent="emerald" style="background:#1f9d6b" aria-label="Emerald"></button>
+          <button class="swatch" data-accent="rose" style="background:#d1447a" aria-label="Rose"></button>
+        </div>
+      </div>
+
       <div id="signedOutView">
         <h2 class="sheet-title">Sign in to sync</h2>
         <div class="hint" style="margin-top:-6px;">Your data stays on this device either way. Sign in to back it up and use it across your devices.</div>
@@ -1058,6 +1096,51 @@
       if (user) handleAuthedUser(user); else handleSignedOut();
     });
   }
+
+  /* ---- appearance (theme + accent) ---- */
+  var THEME_KEY = "daybreak.themeMode";
+  var ACCENT_KEY = "daybreak.accent";
+
+  function updateThemeColorMeta() {
+    var paper = getComputedStyle(document.documentElement).getPropertyValue("--paper").trim();
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if (meta && paper) meta.setAttribute("content", paper);
+  }
+  function currentThemeMode() {
+    try { return JSON.parse(localStorage.getItem(THEME_KEY) || '"system"'); } catch (e) { return "system"; }
+  }
+  function currentAccent() {
+    try { return JSON.parse(localStorage.getItem(ACCENT_KEY) || '"amber"'); } catch (e) { return "amber"; }
+  }
+  function refreshThemeUI() {
+    var mode = currentThemeMode();
+    var accent = currentAccent();
+    document.querySelectorAll("#themeModeBtns button").forEach(function (b) { b.classList.toggle("active", b.dataset.theme === mode); });
+    document.querySelectorAll("#accentSwatches .swatch").forEach(function (b) { b.classList.toggle("selected", b.dataset.accent === accent); });
+  }
+  function applyTheme(mode) {
+    if (mode === "light" || mode === "dark") document.documentElement.setAttribute("data-theme", mode);
+    else document.documentElement.removeAttribute("data-theme");
+    try { localStorage.setItem(THEME_KEY, JSON.stringify(mode)); } catch (e) {}
+    updateThemeColorMeta();
+    refreshThemeUI();
+  }
+  function applyAccent(name) {
+    if (name && name !== "amber") document.documentElement.setAttribute("data-accent", name);
+    else document.documentElement.removeAttribute("data-accent");
+    try { localStorage.setItem(ACCENT_KEY, JSON.stringify(name)); } catch (e) {}
+    refreshThemeUI();
+  }
+  document.getElementById("themeModeBtns").addEventListener("click", function (ev) {
+    var b = ev.target.closest("button"); if (!b) return;
+    applyTheme(b.dataset.theme);
+  });
+  document.getElementById("accentSwatches").addEventListener("click", function (ev) {
+    var b = ev.target.closest(".swatch"); if (!b) return;
+    applyAccent(b.dataset.accent);
+  });
+  refreshThemeUI();
+  updateThemeColorMeta();
 
   /* ---- account sheet UI ---- */
   var accountSheetBackdrop = document.getElementById("accountSheetBackdrop");
